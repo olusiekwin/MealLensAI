@@ -1,0 +1,207 @@
+import { StyleSheet, Dimensions, Platform } from "react-native";
+
+const { width, height } = Dimensions.get('window');
+
+export const authStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 40,
+    left: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appTitle: {
+    alignSelf: 'center',
+    fontWeight: '600',
+    fontSize: 28,
+    color: '#FFFFFF',
+    marginTop: 40,
+    marginBottom: 30,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 30,
+  },
+  formContainer: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 15,
+    height: 60,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 15,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  eyeIcon: {
+    padding: 10,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+  },
+  forgotPasswordText: {
+    fontWeight: '500',
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  submitButton: {
+    height: 60,
+    backgroundColor: '#FF6A00',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  submitButtonDisabled: {
+    backgroundColor: 'rgba(255, 106, 0, 0.7)',
+  },
+  submitButtonText: {
+    fontWeight: '600',
+    fontSize: 18,
+    color: '#FFFFFF',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  dividerText: {
+    fontWeight: '500',
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginHorizontal: 10,
+  },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  socialButton: {
+    marginHorizontal: 15,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  googleIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+  },
+  facebookIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#1877F2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  facebookIconText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  appleIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  appleLogoIcon: {
+    width: 18,
+    height: 18,
+    tintColor: '#FFFFFF',
+  },
+  switchModeContainer: {
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  switchModeText: {
+    fontWeight: '400',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  switchModeHighlight: {
+    fontWeight: '600',
+    color: '#FF6A00',
+  },
+});
