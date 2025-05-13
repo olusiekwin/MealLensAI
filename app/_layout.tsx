@@ -1,22 +1,27 @@
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import * as SplashScreen from "expo-splash-screen";
+import { View } from "react-native";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "index",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  useEffect(() => {
-    // Hide the splash screen after we've done any initialization
-    SplashScreen.hideAsync();
+  const onLayoutRootView = useCallback(async () => {
+    // Add any initialization logic here
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Show splash for 2 seconds
+    await SplashScreen.hideAsync();
   }, []);
 
-  return <RootLayoutNav />;
+  return (
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <RootLayoutNav />
+    </View>
+  );
 }
 
 function RootLayoutNav() {

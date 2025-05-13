@@ -8,12 +8,17 @@ import {
   KeyboardAvoidingView, 
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  Dimensions,
+  Image
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { resetPasswordStyles } from '@/styles/resetPassword.styles';
+import Logo from '@/assets/images/logo-2.svg';
+
+const { width } = Dimensions.get('window');
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -82,16 +87,19 @@ export default function ResetPasswordScreen() {
           <TouchableOpacity style={resetPasswordStyles.backButton} onPress={goBack}>
             <ArrowLeft color="#FFFFFF" size={24} />
           </TouchableOpacity>
-          
-          <Text style={resetPasswordStyles.appTitle}>MealLensAI</Text>
-          
+
+          <Logo
+            width={width * 0.2}
+            height={width * 0.08}
+            style={resetPasswordStyles.logo}
+          />
+
           <ScrollView 
             contentContainerStyle={resetPasswordStyles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
             {!isSubmitted ? (
               <View style={resetPasswordStyles.formContainer}>
-                <Text style={resetPasswordStyles.formTitle}>Reset Password</Text>
                 <Text style={resetPasswordStyles.formDescription}>
                   Create a new password for your account
                 </Text>

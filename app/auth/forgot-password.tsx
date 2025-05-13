@@ -8,12 +8,17 @@ import {
   KeyboardAvoidingView, 
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  Dimensions,
+  Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Mail, CheckCircle } from 'lucide-react-native';
 import { forgotPasswordStyles } from '@/styles/forgotPassword.styles';
+import Logo from '@/assets/images/logo-2.svg';
+
+const { width } = Dimensions.get('window');
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -57,16 +62,19 @@ export default function ForgotPasswordScreen() {
           <TouchableOpacity style={forgotPasswordStyles.backButton} onPress={goBack}>
             <ArrowLeft color="#FFFFFF" size={24} />
           </TouchableOpacity>
-          
-          <Text style={forgotPasswordStyles.appTitle}>MealLensAI</Text>
-          
+
+          <Logo
+            width={width * 0.2}
+            height={width * 0.08}
+            style={forgotPasswordStyles.logo}
+          />
+
           <ScrollView 
             contentContainerStyle={forgotPasswordStyles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
             {!isSubmitted ? (
               <View style={forgotPasswordStyles.formContainer}>
-                <Text style={forgotPasswordStyles.formTitle}>Forgot Password</Text>
                 <Text style={forgotPasswordStyles.formDescription}>
                   Enter your email address and we'll send you a link to reset your password
                 </Text>

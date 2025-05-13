@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "MealLens Onboarding",
-    "slug": "meallens-onboarding",
+    "name": "MealLensAI",
+    "slug": "meallensai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo-2.svg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/halflogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

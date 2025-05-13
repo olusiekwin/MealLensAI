@@ -30,6 +30,13 @@ export const resetPasswordStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  logo: {
+    alignSelf: 'center',
+    width: width * 0.2,
+    height: width * 0.08,
+    marginTop: Platform.OS === 'ios' ? 20 : 10,
+    marginBottom: 10,
+  },
   appTitle: {
     alignSelf: 'center',
     fontWeight: '600',

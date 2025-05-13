@@ -8,13 +8,18 @@ import {
   KeyboardAvoidingView, 
   Platform,
   ScrollView,
-  Image,
-  Alert
+  Alert,
+  Dimensions,
+  Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react-native';
+import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { authStyles } from '@/styles/auth.styles';
+import Logo from '@/assets/images/logo-2.svg';
+
+const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -94,11 +99,11 @@ export default function AuthScreen() {
           style={authStyles.overlay}
         >
           <TouchableOpacity style={authStyles.backButton} onPress={goBack}>
-            <ArrowLeft color="#FFFFFF" size={24} />
+            <ArrowLeft color="#FFFFFF" size={20} />
           </TouchableOpacity>
-          
-          <Text style={authStyles.appTitle}>MealLensAI</Text>
-          
+
+          <Logo width={width * 0.25} height={width * 0.1} style={authStyles.logo} />
+
           <ScrollView 
             contentContainerStyle={authStyles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -112,7 +117,7 @@ export default function AuthScreen() {
                 <View style={authStyles.inputContainer}>
                   <Text style={authStyles.inputLabel}>Full Name</Text>
                   <View style={authStyles.inputWrapper}>
-                    <User size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
+                    <User size={18} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                     <TextInput
                       style={authStyles.input}
                       placeholder="Enter your full name"
@@ -129,7 +134,7 @@ export default function AuthScreen() {
                   {isLogin ? "Email or Phone Number" : "Email Address"}
                 </Text>
                 <View style={authStyles.inputWrapper}>
-                  <Mail size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
+                  <Mail size={18} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                   <TextInput
                     style={authStyles.input}
                     placeholder={isLogin ? "Enter your email" : "Enter your email address"}
@@ -145,7 +150,7 @@ export default function AuthScreen() {
               <View style={authStyles.inputContainer}>
                 <Text style={authStyles.inputLabel}>Password</Text>
                 <View style={authStyles.inputWrapper}>
-                  <Lock size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
+                  <Lock size={18} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                   <TextInput
                     style={authStyles.input}
                     placeholder="Enter your password"
@@ -159,9 +164,9 @@ export default function AuthScreen() {
                     onPress={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
+                      <EyeOff size={18} color="rgba(255, 255, 255, 0.7)" />
                     ) : (
-                      <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
+                      <Eye size={18} color="rgba(255, 255, 255, 0.7)" />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -180,7 +185,7 @@ export default function AuthScreen() {
                 <View style={authStyles.inputContainer}>
                   <Text style={authStyles.inputLabel}>Confirm Password</Text>
                   <View style={authStyles.inputWrapper}>
-                    <Lock size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
+                    <Lock size={18} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                     <TextInput
                       style={authStyles.input}
                       placeholder="Confirm your password"
@@ -199,9 +204,9 @@ export default function AuthScreen() {
                       onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                       {showConfirmPassword ? (
-                        <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
+                        <EyeOff size={18} color="rgba(255, 255, 255, 0.7)" />
                       ) : (
-                        <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
+                        <Eye size={18} color="rgba(255, 255, 255, 0.7)" />
                       )}
                     </TouchableOpacity>
                   </View>
@@ -232,25 +237,19 @@ export default function AuthScreen() {
               
               <View style={authStyles.socialButtonsContainer}>
                 <TouchableOpacity style={authStyles.socialButton}>
-                  <Image 
-                    source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }} 
-                    style={authStyles.googleIcon} 
+                  <AntDesign name="google" size={22} color="#DB4437" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={authStyles.socialButton}>
+                  <FontAwesome name="facebook" size={24} color="#1877F2" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={[authStyles.socialButton, { backgroundColor: Platform.OS === 'ios' ? '#000' : '#FFFFFF' }]}>
+                  <AntDesign 
+                    name="apple1" 
+                    size={24} 
+                    color={Platform.OS === 'ios' ? '#FFFFFF' : '#000'} 
                   />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={authStyles.socialButton}>
-                  <View style={authStyles.facebookIcon}>
-                    <Text style={authStyles.facebookIconText}>f</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={authStyles.socialButton}>
-                  <View style={authStyles.appleIcon}>
-                    <Image 
-                      source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Apple-logo.png' }} 
-                      style={authStyles.appleLogoIcon} 
-                    />
-                  </View>
                 </TouchableOpacity>
               </View>
               
