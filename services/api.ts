@@ -1,7 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ENV from '../config/environment';
 
-const API_BASE_URL = 'https://meallensai-backend.onrender.com/api/v1';
+const API_BASE_URL = ENV.API_URL;
+
+console.log('🔄 Initializing API with base URL:', API_BASE_URL);
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -9,11 +12,13 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Add request interceptor to add auth token to requests
 api.interceptors.request.use(
   async (config) => {
+    console.log(`🔵 [API Request] ${config.method?.toUpperCase()} ${config.url}`);
     const token = await AsyncStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -21,9 +26,76 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('❌ [API Request Error]:', error.message);
     return Promise.reject(error);
   }
 );
+
+// Add response interceptor for logging
+api.interceptors.response.use(
+  response => {
+    console.log(`🟢 [API Response] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`);
+    return response;
+  },
+  error => {
+    console.error('❌ [API Error]', error.config?.url + ':', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
+
+// Test backend connection
+export const testBackendConnection = async () => {
+  try {
+    console.log('🔄 Testing backend connection to:', API_BASE_URL);
+    const response = await api.get('/debug/ping');
+    console.log('✅ Backend connection successful:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Backend connection failed:', {
+      url: API_BASE_URL,
+      error: error.message,
+      details: error.response?.data || 'No response data'
+    });
+    throw error;
+  }
+};
+
+// Auth endpoints
+export const registerUser = async (userData: { 
+  email: string; 
+  password: string; 
+  confirm_password: string;
+  username: string; 
+}) => {
+  try {
+    console.log('🔄 Attempting user registration');
+    const response = await api.post('/auth/register', userData);
+    console.log('✅ Registration successful:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Registration failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const loginUser = async (credentials: { email: string; password: string }) => {
+  try {
+    console.log('🔄 Attempting login');
+    const response = await api.post('/auth/login', credentials);
+    if (response.data.token) {
+      await AsyncStorage.setItem('auth_token', response.data.token);
+      console.log('✅ Login successful and token stored');
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Login failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
 
 // Track app usage
 export const trackAppUsage = async () => {

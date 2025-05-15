@@ -6,6 +6,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimen
 import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Star, CheckCircle2, Clock, Zap } from "lucide-react-native";
+import { testBackendConnection } from '../services/api';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -18,6 +19,17 @@ SplashScreen.preventAutoHideAsync();
 const { width } = Dimensions.get('window');
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Test backend connection when app starts
+    testBackendConnection()
+      .then(response => {
+        console.log('✅ Backend connection test:', response);
+      })
+      .catch(error => {
+        console.error('❌ Backend connection failed:', error);
+      });
+  }, []);
+
   const [isReady, setIsReady] = useState(false);
   const [totalUsageCount, setTotalUsageCount] = useState(0);
   const [dailyUsageCount, setDailyUsageCount] = useState(0);
