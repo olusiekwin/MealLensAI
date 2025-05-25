@@ -12,21 +12,23 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react-native';
 import { authStyles } from '@/styles/auth.styles';
 import { authService } from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AuthScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [generalError, setGeneralError] = useState('');
@@ -50,8 +52,8 @@ export default function AuthScreen() {
 
     // Registration-specific validations
     if (!isLogin) {
-      if (!name.trim()) {
-        setGeneralError('Please enter your name');
+      if (!username.trim()) {
+        setGeneralError('Please enter your username');
         return false;
       }
 
@@ -70,27 +72,73 @@ export default function AuthScreen() {
     }
 
     setIsLoading(true);
+    setGeneralError(''); // Clear previous general errors
     
     try {
       if (isLogin) {
         // Login
-        await authService.login({ email, password });
-        router.push('/(tabs)');
+        const responseData = await authService.login({ email, password });
+        if (responseData && responseData.token) {
+          await AsyncStorage.setItem('auth_token', responseData.token);
+          // Optionally store user data if your backend sends it
+          // if (responseData.user) {
+          //   await AsyncStorage.setItem('user_data', JSON.stringify(responseData.user));
+          // }
+          router.push('/(tabs)');
+        } else {
+          // Handle case where token is not in response or responseData is falsy
+          setGeneralError(responseData?.message || 'Login failed. Please try again.');
+        }
       } else {
         // Register
-        await authService.register({ name, email, password, confirmPassword });
-        Alert.alert(
-          "Registration Successful",
-          "Your account has been created successfully!",
-          [{ text: "OK", onPress: () => router.push('/(tabs)') }]
-        );
+        let dietaryPreferences: string[] = [];
+        let cookingSkill: string = '';
+
+        if (typeof params.dietaryPreferences === 'string') {
+          try {
+            dietaryPreferences = JSON.parse(params.dietaryPreferences);
+          } catch (e) {
+            console.error("Failed to parse dietaryPreferences from params:", e);
+          }
+        }
+        if (typeof params.cookingSkill === 'string') {
+          cookingSkill = params.cookingSkill;
+        }
+
+        const registrationData = {
+          username: username,
+          email,
+          password,
+          confirm_password: confirmPassword, // Send confirmPassword from state as confirm_password
+        };
+
+        const responseData = await authService.register(registrationData);
+        if (responseData && responseData.token) {
+          await AsyncStorage.setItem('auth_token', responseData.token);
+          // Optionally store user data if your backend sends it
+          // if (responseData.user) {
+          //   await AsyncStorage.setItem('user_data', JSON.stringify(responseData.user));
+          // }
+          Alert.alert(
+            "Registration Successful",
+            "Your account has been created successfully!",
+            [{ text: "OK", onPress: () => router.push('/(tabs)') }]
+          );
+        } else {
+          // Handle case where token is not in response or responseData is falsy
+          setGeneralError(responseData?.message || 'Registration failed. Please try again.');
+        }
       }
-    } catch (error) {
-      if (error instanceof Error) {
+    } catch (error: any) { // Explicitly type error
+      if (error.response && error.response.data && error.response.data.message) {
+        // Handle errors from backend (e.g., validation errors, user exists)
+        setGeneralError(error.response.data.message);
+      } else if (error instanceof Error) {
         setGeneralError(error.message);
       } else {
-        setGeneralError('An unexpected error occurred');
+        setGeneralError('An unexpected error occurred. Please try again.');
       }
+      console.error('Auth Error:', error.response?.data || error.message || error);
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +158,13 @@ export default function AuthScreen() {
   };
 
   const goBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      // If there's no screen to go back to (e.g., /auth was the first screen after a replace),
+      // navigate to the initial route or a sensible default.
+      router.replace('/'); // Navigates to app/index.tsx
+    }
   };
 
   return (
@@ -150,14 +204,15 @@ export default function AuthScreen() {
               {!isLogin && (
                 <View style={authStyles.inputContainer}>
                   <Text style={authStyles.inputLabel}>Full Name</Text>
-                  <View style={authStyles.inputWrapper}>
+                  <View style={authStyles.inputField}>
                     <User size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                     <TextInput
                       style={authStyles.input}
-                      placeholder="Enter your full name"
+                      placeholder="Enter your username"
                       placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                      value={name}
-                      onChangeText={setName}
+                      value={username}
+                      onChangeText={setUsername}
+                      autoCapitalize="none"
                     />
                   </View>
                 </View>

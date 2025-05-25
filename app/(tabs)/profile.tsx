@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Text, 
   View, 
@@ -14,23 +14,74 @@ import { Settings, Camera, Edit, Trophy } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { profileStyles } from '@/styles/profile.styles';
+import { authService } from '@/services/api';
+
+interface UserProfileData {
+  name: string;
+  phone: string;
+  email: string;
+  dob: string;
+  gender: string;
+  address: string;
+  profileImageUrl?: string;
+  dietaryPrefs?: string[];
+  skillLevel?: string;
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [profileImage, setProfileImage] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+  const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150');
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [userData, setUserData] = useState({
-    name: 'Samuel Barns',
-    phone: '+1 523 458 78 12',
-    email: 'S.Barns@gmail.com',
-    dob: '04/20/1996',
-    gender: 'Male',
-    address: 'KK 21 KG 102 St'
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [userData, setUserData] = useState<Partial<UserProfileData>>({
+    name: 'Loading...',
+    phone: '...',
+    email: '...',
+    dob: '...',
+    gender: '...',
+    address: '...'
   });
+  const [userDietaryPreferences, setUserDietaryPreferences] = useState<string[]>([]);
+  const [userCookingSkill, setUserCookingSkill] = useState<string>('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [initialProfileImageUrl, setInitialProfileImageUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoadingProfile(true);
+      try {
+        const data: UserProfileData = await authService.getUserProfile();
+        setUserData({
+          name: data.name || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          dob: data.dob || '',
+          gender: data.gender || '',
+          address: data.address || '',
+        });
+        if (data.profileImageUrl) {
+          setProfileImage(data.profileImageUrl);
+          setInitialProfileImageUrl(data.profileImageUrl);
+        }
+        if (data.dietaryPrefs) {
+          setUserDietaryPreferences(data.dietaryPrefs);
+        }
+        if (data.skillLevel) {
+          setUserCookingSkill(data.skillLevel);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error);
+        Alert.alert('Error', 'Could not load your profile. Please try again later.');
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
 
   const pickImage = async () => {
-    // Request permissions
     if (Platform.OS !== 'web') {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -38,10 +89,6 @@ export default function ProfileScreen() {
         return;
       }
     }
-
-    setIsUploading(true);
-
-    // Launch image picker
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -49,10 +96,43 @@ export default function ProfileScreen() {
       quality: 0.7,
     });
 
-    setIsUploading(false);
-
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSavingProfile(true);
+    try {
+      const updatedProfileData: Partial<UserProfileData> = { ...userData };
+
+      if (profileImage !== initialProfileImageUrl && profileImage.startsWith('file://')) {
+        // This is a simplified assumption. Real image upload is more complex.
+        // For now, we'll just pretend we're sending the local URI if it changed.
+        // In a real app, you'd upload `profileImage` to a server/storage,
+        // get a new URL, and send that URL in `updatedProfileData.profileImageUrl`.
+        // For this example, we won't send the image URI if it's local, to avoid backend errors.
+        // Alert.alert("Image Upload Note", "Image has changed. Implement actual upload to server.");
+        // updatedProfileData.profileImageUrl = profileImage; // Or new URL from server
+      } else if (profileImage === initialProfileImageUrl) {
+        delete updatedProfileData.profileImageUrl;
+      }
+      
+      updatedProfileData.dietaryPrefs = userDietaryPreferences;
+      updatedProfileData.skillLevel = userCookingSkill;
+
+      const response = await authService.updateUserProfile(updatedProfileData);
+      Alert.alert('Success', 'Profile updated successfully!');
+      setIsEditing(false);
+      // Optionally, update state with response if backend returns the full updated profile
+      // setUserData(response.user); 
+      // if (response.user.profileImageUrl) setProfileImage(response.user.profileImageUrl);
+
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      Alert.alert('Error', 'Could not update your profile. Please try again.');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -62,18 +142,35 @@ export default function ProfileScreen() {
 
   const toggleEditMode = () => {
     if (isEditing) {
-      // Save changes
-      Alert.alert('Success', 'Profile updated successfully!');
+      handleSaveChanges();
+    } else {
+      setIsEditing(true);
     }
-    setIsEditing(!isEditing);
   };
 
-  const updateField = (field: string, value: string) => {
-    setUserData({
-      ...userData,
+  const updateField = (field: keyof Omit<UserProfileData, 'dietaryPrefs' | 'skillLevel'>, value: string) => {
+    setUserData(prevData => ({
+      ...prevData,
       [field]: value
-    });
+    }));
   };
+
+  const handleDietaryPreferenceChange = (newPreferences: string[]) => {
+    setUserDietaryPreferences(newPreferences);
+  };
+
+  const handleCookingSkillChange = (newSkill: string) => {
+    setUserCookingSkill(newSkill);
+  };
+
+  if (isLoadingProfile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}> 
+        <ActivityIndicator size="large" color="#FF6A00" />
+        <Text style={{ marginTop: 10, fontSize: 16, color: '#333' }}>Loading Profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={profileStyles.container}>
@@ -142,12 +239,18 @@ export default function ProfileScreen() {
         <TouchableOpacity 
           style={[
             profileStyles.editButton,
-            isEditing && profileStyles.saveButton
+            isEditing && profileStyles.saveButton,
+            isSavingProfile && { opacity: 0.7 }
           ]}
           onPress={toggleEditMode}
+          disabled={isSavingProfile}
         >
           {isEditing ? (
-            <Text style={profileStyles.editButtonText}>Save</Text>
+            isSavingProfile ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={profileStyles.editButtonText}>Save</Text>
+            )
           ) : (
             <View style={profileStyles.editButtonContent}>
               <Edit size={16} color="#FFFFFF" style={profileStyles.editIcon} />
@@ -224,13 +327,56 @@ export default function ProfileScreen() {
                 profileStyles.input,
                 isEditing && profileStyles.inputEditable
               ]}
-              value={userData.address}
+              value={userData.address || ''}
               onChangeText={(text) => updateField('address', text)}
               editable={isEditing}
               placeholderTextColor="#B5B5B5"
             />
           </View>
         </View>
+
+        {/* Dietary Preferences Section */}
+        <View style={profileStyles.formGroup}>
+          <Text style={profileStyles.formLabel}>Dietary Preferences</Text>
+          {isEditing ? (
+            <View style={profileStyles.inputContainer}> 
+              {/* Placeholder for multi-select component for dietary preferences */}
+              {/* For now, using a simple text input as a placeholder for editing */}
+              <TextInput
+                style={profileStyles.inputEditable} // Assuming inputEditable makes it look like an input
+                value={userDietaryPreferences.join(', ')} // Display as comma-separated
+                onChangeText={(text) => handleDietaryPreferenceChange(text.split(',').map(s => s.trim()).filter(s => s))}
+                placeholder="e.g., Vegetarian, Gluten-Free"
+                placeholderTextColor="#B5B5B5"
+              />
+              <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}> (Comma-separated. Proper multi-select recommended)</Text>
+            </View>
+          ) : (
+            <Text style={{ ...profileStyles.input, backgroundColor: 'transparent', borderColor: 'transparent' }}>
+              {userDietaryPreferences.length > 0 ? userDietaryPreferences.join(', ') : 'Not set'}
+            </Text>
+          )}
+        </View>
+
+        {/* Cooking Skill Section */}
+        <View style={profileStyles.formGroup}>
+          <Text style={profileStyles.formLabel}>Cooking Skill</Text>
+          {isEditing ? (
+            <View style={profileStyles.inputContainer}>
+              {/* Placeholder for a picker component, using TextInput for now */}
+              <TextInput
+                style={profileStyles.inputEditable}
+                value={userCookingSkill}
+                onChangeText={handleCookingSkillChange} // Assumes handleCookingSkillChange updates string state
+                placeholder="e.g., Beginner, Intermediate, Advanced"
+                placeholderTextColor="#B5B5B5"
+              />
+            </View>
+          ) : (
+            <Text style={{ ...profileStyles.input, backgroundColor: 'transparent', borderColor: 'transparent' }}>{userCookingSkill || 'Not set'}</Text>
+          )}
+        </View>
+
       </View>
     </ScrollView>
   );

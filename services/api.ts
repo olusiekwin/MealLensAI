@@ -25,6 +25,38 @@ api.interceptors.request.use(
   }
 );
 
+// AuthService for login and registration
+export const authService = {
+  login: async (credentials: { email: string; password: string }) => {
+    // Assuming your backend returns an object like { token: '...', user: { ... } } or similar
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  },
+  register: async (userData: { 
+    username: string; 
+    email: string; 
+    password: string; 
+    confirm_password?: string; 
+  }) => {
+    // The userData is now expected to be the exact payload for the backend, 
+    // constructed in app/auth.tsx as { username, email, password, confirm_password }.
+    // No fields like dietaryPrefs or skillLevel are expected here for registration.
+    const response = await api.post('/auth/register', userData); 
+    return response.data;
+  },
+  getUserProfile: async () => {
+    const response = await api.get('/user/profile'); // Assuming this is your GET profile endpoint
+    return response.data;
+  },
+  updateUserProfile: async (profileData: any) => { // Using any for now, can be refined with a ProfileData type
+    const response = await api.put('/user/profile', profileData); // Assuming this is your PUT profile endpoint
+    return response.data;
+  },
+  // You can add more auth-related functions here later, e.g.:
+  // forgotPassword: async (email: string) => { ... },
+  // resetPassword: async (data: { token; password }) => { ... },
+};
+
 // Track app usage
 export const trackAppUsage = async () => {
   try {

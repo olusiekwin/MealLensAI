@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, Dimensions, TextInput, StyleSheet } from 'react-native';
+import React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ImageBackground, Dimensions, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
 import { Camera, ChevronRight, Search, Check } from 'lucide-react-native';
 import { onboardingStyles } from '@/styles/onboarding.styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -35,16 +37,42 @@ export default function OnboardingScreen() {
   const [cookingSkill, setCookingSkill] = useState<string>('');
   const [ingredientInput, setIngredientInput] = useState('');
   const [inputMethod, setInputMethod] = useState<string>('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  const onLayoutRootView = useCallback(async () => {
-    await SplashScreen.hideAsync();
-  }, []);
+  useEffect(() => {
+    const checkAuthAndOnboardingStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem('auth_token');
+        const onboardingCompleted = await AsyncStorage.getItem('onboarding_completed');
 
-  const handleNext = () => {
+        if (token) {
+          router.replace('/(tabs)');
+        } else if (onboardingCompleted) {
+          router.replace('/auth');
+        } else {
+          setIsCheckingAuth(false);
+          await SplashScreen.hideAsync();
+        }
+      } catch (e) {
+        console.warn('Error checking auth/onboarding status:', e);
+        setIsCheckingAuth(false);
+        await SplashScreen.hideAsync();
+      }
+    };
+
+    checkAuthAndOnboardingStatus();
+  }, [router]);
+
+  const handleNext = async () => {
     if (currentScreen < 3) {
       setCurrentScreen(currentScreen + 1);
     } else {
-      router.push('/auth');
+      await AsyncStorage.setItem('onboarding_completed', 'true');
+      const params = {
+        dietaryPreferences: JSON.stringify(selectedPreferences),
+        cookingSkill: cookingSkill,
+      };
+      router.push({ pathname: '/auth', params });
     }
   };
 
@@ -60,17 +88,28 @@ export default function OnboardingScreen() {
     setCookingSkill(id);
   };
 
-  const selectInputMethod = (method: string) => {
+  const selectInputMethod = async (method: string) => {
     setInputMethod(method);
-    if (currentScreen === 3) {
-      // If this is the last screen, navigate to auth after selecting input method
-      setTimeout(() => {
-        router.push('/auth');
-      }, 500);
-    } else {
-      handleNext();
+    try {
+      await AsyncStorage.setItem('onboarding_completed', 'true');
+      const params = {
+        dietaryPreferences: JSON.stringify(selectedPreferences),
+        cookingSkill: cookingSkill,
+      };
+      router.push({ pathname: '/auth', params });
+    } catch (e) {
+      console.error("Failed to set onboarding_completed flag or navigate:", e);
+      router.push('/auth');
     }
   };
+
+  if (isCheckingAuth) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF6A00" />
+      </View>
+    );
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -227,7 +266,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View style={onboardingStyles.container} onLayout={onLayoutRootView}>
+    <View style={onboardingStyles.container}>
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80' }}
         style={onboardingStyles.backgroundImage}

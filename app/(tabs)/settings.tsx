@@ -23,6 +23,7 @@ import {
   CreditCard
 } from 'lucide-react-native';
 import { settingsStyles } from '@/styles/settings.styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -40,7 +41,15 @@ export default function SettingsScreen() {
         },
         { 
           text: "Logout", 
-          onPress: () => router.push('/auth')
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('auth_token');
+              router.replace('/auth');
+            } catch (e) {
+              console.error("Error during logout:", e);
+              router.replace('/auth');
+            }
+          }
         }
       ]
     );
