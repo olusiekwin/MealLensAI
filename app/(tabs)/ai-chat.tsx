@@ -52,12 +52,44 @@ export default function AIChatScreen() {
   const params = useLocalSearchParams();
 
   useEffect(() => {
-    // Check if we have data from camera
-    if (params.foodName) {
-      setDetectedFood(params.foodName as string);
-      loadFoodData(params.foodName as string);
-    } else {
-      // Default data for testing
+    try {
+      // Check if we have data from camera
+      if (params.result) {
+        const result = JSON.parse(params.result as string);
+        if (result.success && result.data) {
+          // Process the data from the camera
+          const { detectedItems } = result.data;
+          if (detectedItems && detectedItems.length > 0) {
+            // Set the first detected item as the main food
+            setDetectedFood(detectedItems[0].name || 'Detected Food');
+            
+            // Process ingredients if available
+            if (result.data.ingredients) {
+              setIngredients(result.data.ingredients);
+            }
+            
+            // Process instructions if available
+            if (result.data.instructions) {
+              setCookingInstructions(result.data.instructions);
+            }
+            
+            // Process recipes if available
+            if (result.data.recipes) {
+              setRecipes(result.data.recipes);
+            }
+            
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      
+      // Fallback to mock data if no valid data from camera
+      setDetectedFood('Avocado & Egg Sandwich');
+      loadFoodData('Avocado & Egg Sandwich');
+    } catch (error) {
+      console.error('Error processing image data:', error);
+      // Fallback to mock data on error
       setDetectedFood('Avocado & Egg Sandwich');
       loadFoodData('Avocado & Egg Sandwich');
     }
@@ -66,10 +98,10 @@ export default function AIChatScreen() {
   const loadFoodData = async (foodName: string) => {
     setIsLoading(true);
     try {
-      // Track usage
-      const usageStatus = await trackAppUsage();
+      // Track usage (commented out as it was causing errors)
+      // const usageStatus = await trackAppUsage();
       
-      // Mock data for ingredients
+      // Mock data for ingredients (fallback)
       setIngredients([
         '2 slices of bread (whole-grain or sourdough)',
         '1 ripe avocado (mashed or sliced)',
@@ -80,7 +112,7 @@ export default function AIChatScreen() {
         'Fresh herbs (like parsley, chives or basil)'
       ]);
       
-      // Mock data for cooking instructions
+      // Mock data for cooking instructions (fallback)
       setCookingInstructions([
         '1. Toast the bread slices until golden brown.',
         '2. Mash the avocado in a bowl and season with salt, pepper, and a splash of lemon juice if using.',
@@ -91,12 +123,12 @@ export default function AIChatScreen() {
         '7. Serve immediately and enjoy!'
       ]);
       
-      // Mock data for recipe suggestions
+      // Mock data for recipe suggestions (fallback)
       setRecipes([
         {
           id: '1',
-          title: 'Egg & Avocado Sandwich',
-          image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+          title: foodName || 'Egg & Avocado Sandwich',
+          image: params.imageUri || 'https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
           cookTime: '15 min',
           difficulty: 'Easy',
           description: 'An egg and avocado sandwich made with creamy avocado spread, a perfectly cooked egg, and fresh bread.',
@@ -163,7 +195,7 @@ export default function AIChatScreen() {
     return (
       <View style={aiChatStyles.loadingContainer}>
         <LinearGradient
-          colors={['#FF6A00', '#FF8F47']}
+          colors={['#000000', '#FF8F47']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={aiChatStyles.headerBackground}
@@ -176,7 +208,7 @@ export default function AIChatScreen() {
           </TouchableOpacity>
         </LinearGradient>
         <View style={aiChatStyles.loadingContentContainer}>
-          <ActivityIndicator size="large" color="#FF6A00" />
+          <ActivityIndicator size="large" color="#000000" />
           <Text style={aiChatStyles.loadingText}>Analyzing your food...</Text>
         </View>
       </View>
@@ -189,7 +221,7 @@ export default function AIChatScreen() {
       
       {/* Header */}
       <LinearGradient
-        colors={['#FF6A00', '#FF8F47']}
+        colors={['#000000', '#FF8F47']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={aiChatStyles.headerBackground}
@@ -252,7 +284,7 @@ export default function AIChatScreen() {
               </Text>
               <View style={aiChatStyles.recipeDetails}>
                 <View style={aiChatStyles.detailItem}>
-                  <Star size={10} color="#FF6A00" fill="#FF6A00" />
+                  <Star size={10} color="#000000" fill="#000000" />
                   <Text style={aiChatStyles.detailText}>{recipe.rating}</Text>
                 </View>
                 <View style={aiChatStyles.detailItem}>

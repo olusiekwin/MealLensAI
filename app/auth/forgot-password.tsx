@@ -9,13 +9,14 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Mail, CheckCircle } from 'lucide-react-native';
-import { forgotPasswordStyles } from '@/styles/forgotPassword.styles';
-import { authService } from '@/services/api';
+import { authStyles } from '@/styles/auth.styles';
+import { authService } from '@/services/authService';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -62,45 +63,50 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={forgotPasswordStyles.container}
+      style={authStyles.container}
     >
       <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80' }}
-        style={forgotPasswordStyles.backgroundImage}
+        source={require('../../assets/images/loginbg.png')}
+        style={authStyles.backgroundImage}
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)']}
-          style={forgotPasswordStyles.overlay}
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)']}
+          style={authStyles.overlay}
         >
-          <TouchableOpacity style={forgotPasswordStyles.backButton} onPress={goBack}>
+          <TouchableOpacity style={authStyles.backButton} onPress={goBack}>
             <ArrowLeft color="#FFFFFF" size={24} />
           </TouchableOpacity>
           
-          <Text style={forgotPasswordStyles.appTitle}>MealLensAI</Text>
+          <View style={authStyles.logoContainer}>
+            <Image 
+              source={require('../../assets/images/logo-2.svg')} 
+              style={authStyles.logo}
+            />
+          </View>
           
           <ScrollView 
-            contentContainerStyle={forgotPasswordStyles.scrollContent}
+            contentContainerStyle={authStyles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
             {!isSubmitted ? (
-              <View style={forgotPasswordStyles.formContainer}>
-                <Text style={forgotPasswordStyles.formTitle}>Forgot Password</Text>
-                <Text style={forgotPasswordStyles.formDescription}>
+              <View style={authStyles.formContainer}>
+                <Text style={authStyles.formTitle}>Forgot Password</Text>
+                <Text style={[authStyles.formDescription, { marginBottom: 24 }]}>
                   Enter your email address and we'll send you a link to reset your password
                 </Text>
                 
                 {error ? (
-                  <View style={forgotPasswordStyles.errorContainer}>
-                    <Text style={forgotPasswordStyles.errorText}>{error}</Text>
+                  <View style={authStyles.errorContainer}>
+                    <Text style={authStyles.errorText}>{error}</Text>
                   </View>
                 ) : null}
                 
-                <View style={forgotPasswordStyles.inputContainer}>
-                  <Text style={forgotPasswordStyles.inputLabel}>Email Address</Text>
-                  <View style={forgotPasswordStyles.inputWrapper}>
-                    <Mail size={20} color="rgba(255, 255, 255, 0.7)" style={forgotPasswordStyles.inputIcon} />
+                <View style={authStyles.inputContainer}>
+                  <Text style={authStyles.inputLabel}>Email Address</Text>
+                  <View style={authStyles.inputWrapper}>
+                    <Mail size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
                     <TextInput
-                      style={forgotPasswordStyles.input}
+                      style={authStyles.input}
                       placeholder="Enter your email address"
                       placeholderTextColor="rgba(255, 255, 255, 0.5)"
                       keyboardType="email-address"
@@ -113,8 +119,8 @@ export default function ForgotPasswordScreen() {
                 
                 <TouchableOpacity 
                   style={[
-                    forgotPasswordStyles.submitButton,
-                    isLoading && forgotPasswordStyles.submitButtonDisabled
+                    authStyles.submitButton,
+                    isLoading && authStyles.submitButtonDisabled
                   ]} 
                   onPress={handleSubmit}
                   disabled={isLoading}
@@ -122,34 +128,34 @@ export default function ForgotPasswordScreen() {
                   {isLoading ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Text style={forgotPasswordStyles.submitButtonText}>
+                    <Text style={authStyles.submitButtonText}>
                       Send Reset Link
                     </Text>
                   )}
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
-                  style={forgotPasswordStyles.backToLoginContainer} 
+                  style={authStyles.switchModeContainer} 
                   onPress={goBack}
                 >
-                  <Text style={forgotPasswordStyles.backToLoginText}>
+                  <Text style={authStyles.switchModeText}>
                     Back to Login
                   </Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={forgotPasswordStyles.successContainer}>
-                <CheckCircle size={80} color="#FF6A00" />
-                <Text style={forgotPasswordStyles.successTitle}>Email Sent!</Text>
-                <Text style={forgotPasswordStyles.successDescription}>
+              <View style={authStyles.successContainer}>
+                <CheckCircle size={80} color="#000000" />
+                <Text style={authStyles.successTitle}>Email Sent!</Text>
+                <Text style={authStyles.successDescription}>
                   We've sent a password reset link to {email}. Please check your inbox and follow the instructions.
                 </Text>
                 
                 <TouchableOpacity 
-                  style={forgotPasswordStyles.backToLoginButton} 
+                  style={authStyles.switchModeContainer} 
                   onPress={() => router.push('/auth')}
                 >
-                  <Text style={forgotPasswordStyles.backToLoginButtonText}>
+                  <Text style={authStyles.switchModeText}>
                     Back to Login
                   </Text>
                 </TouchableOpacity>

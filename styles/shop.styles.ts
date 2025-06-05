@@ -45,7 +45,7 @@ export const shopStyles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -125,7 +125,7 @@ export const shopStyles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FF6A00',
+    color: '#000000',
     marginBottom: 4,
   },
   productQuantity: {
@@ -255,7 +255,7 @@ export const shopStyles = StyleSheet.create({
   alternativePrice: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF6A00',
+    color: '#000000',
   },
   alternativeAddButton: {
     position: 'absolute',

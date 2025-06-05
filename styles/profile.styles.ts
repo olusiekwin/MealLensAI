@@ -97,7 +97,7 @@ export const profileStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -136,7 +136,7 @@ export const profileStyles = StyleSheet.create({
     marginRight: 8,
   },
   saveButton: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
   },
   editButtonText: {
     fontSize: 14,

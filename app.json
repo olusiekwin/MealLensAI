@@ -1,37 +1,94 @@
 {
   "expo": {
-    "name": "MealLens Onboarding",
-    "slug": "meallens-onboarding",
+    "name": "MealLensAI",
+    "slug": "meallensai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/halflogo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/halflogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A1A1A"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.meallens-onboarding"
+      "bundleIdentifier": "app.rork.meallens-onboarding",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["meallensai"]
+          }
+        ]
+      },
+      "splash": {
+        "image": "./assets/images/halflogo.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1A1A1A",
+        "tabletImage": "./assets/images/halflogo.png"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/halflogo.png",
+        "backgroundColor": "#1A1A1A"
       },
-      "package": "app.rork.meallens-onboarding"
+      "package": "com.rork.meallensai",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "meallensai"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "splash": {
+        "image": "./assets/images/halflogo.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1A1A1A",
+        "mdpi": "./assets/images/halflogo.png",
+        "hdpi": "./assets/images/halflogo.png",
+        "xhdpi": "./assets/images/halflogo.png",
+        "xxhdpi": "./assets/images/halflogo.png",
+        "xxxhdpi": "./assets/images/halflogo.png"
+      }
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/halflogo.png",
+      "splash": {
+        "image": "./assets/images/halflogo.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#1A1A1A"
+      },
+      "config": {
+        "firebase": {
+          "appId": "1:838657313693:web:YOUR_WEB_APP_ID"
+        }
+      }
     },
     "plugins": [
       [
         "expo-router",
         {
           "origin": "https://rork.app/"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/halflogo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1A1A"
         }
       ]
     ],

@@ -14,7 +14,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
   width,
   height = 6,
-  color = '#FF6A00',
+  color = '#000000',
   unfilledColor = '#F0F0F0',
   borderRadius = 3,
 }) => {

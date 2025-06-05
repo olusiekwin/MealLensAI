@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Home, Salad, Heart, User } from "lucide-react-native";
+import { Home, Heart, User, CookingPot } from "lucide-react-native";
 import { View } from "react-native";
 
 import Colors from "@/constants/colors";
@@ -10,7 +10,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
-        tabBarActiveTintColor: "#FF6A00",
+        tabBarActiveTintColor: "#000000",
         tabBarInactiveTintColor: "#B5B5B5",
         headerShown: false,
         tabBarStyle: tabBarStyles.tabBar,
@@ -22,9 +22,9 @@ export default function TabLayout() {
           
           if (route.name === 'index') {
             Icon = Home;
-          } else if (route.name === 'recipes') {
-            Icon = Salad;
-          } else if (route.name === 'health') {
+          } else if (route.name === 'detection') {
+            Icon = CookingPot;
+          } else if (route.name === 'favorites') {
             Icon = Heart;
           } else if (route.name === 'profile') {
             Icon = User;
@@ -32,7 +32,7 @@ export default function TabLayout() {
           
           return (
             <View style={tabBarStyles.iconContainer}>
-              {Icon && <Icon size={24} color={focused ? "#FF6A00" : "#B5B5B5"} fill={focused ? "#FF6A00" : "none"} />}
+              {Icon && <Icon size={24} color={focused ? "#000000" : "#B5B5B5"} fill={focused ? "#000000" : "none"} />}
             </View>
           );
         },
@@ -45,15 +45,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="recipes"
+        name="detection"
         options={{
-          title: "Recipes",
+          title: "Detection History",
         }}
       />
       <Tabs.Screen
-        name="health"
+        name="favorites"
         options={{
-          title: "Health",
+          title: "Favorites",
         }}
       />
       <Tabs.Screen

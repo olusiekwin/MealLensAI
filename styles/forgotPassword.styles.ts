@@ -102,7 +102,7 @@ export const forgotPasswordStyles = StyleSheet.create({
   },
   submitButton: {
     height: 60,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
@@ -167,6 +167,6 @@ export const forgotPasswordStyles = StyleSheet.create({
   backToLoginButtonText: {
     fontWeight: '600',
     fontSize: 18,
-    color: '#FF6A00',
+    color: '#000000',
   },
 });

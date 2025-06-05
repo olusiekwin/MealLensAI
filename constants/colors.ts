@@ -7,7 +7,7 @@ export default {
     tint: tintColorLight,
     tabIconDefault: "#B5B5B5",
     tabIconSelected: tintColorLight,
-    accent: "#FF6A00",
+    accent: "#000000",
     secondary: "#6A6A6A",
     lightGray: "#F5F5F5",
   },

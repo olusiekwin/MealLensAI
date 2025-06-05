@@ -69,7 +69,7 @@ export const aiChatStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF6A00',
+    color: '#000000',
     marginBottom: 10,
   },
   ingredientsList: {

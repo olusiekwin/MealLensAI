@@ -91,7 +91,7 @@ export default function RecipesScreen() {
                   <Text style={recipesStyles.detailText}>{item.time}</Text>
                 </View>
                 <View style={recipesStyles.detailItem}>
-                  <Star size={12} color="#FF6A00" />
+                  <Star size={12} color="#000000" />
                   <Text style={recipesStyles.detailText}>{item.rating}</Text>
                 </View>
                 <TouchableOpacity 
@@ -133,7 +133,7 @@ export default function RecipesScreen() {
                         <Text style={recipesStyles.detailText}>{recipe.time}</Text>
                       </View>
                       <View style={recipesStyles.detailItem}>
-                        <Star size={12} color="#FF6A00" />
+                        <Star size={12} color="#000000" />
                         <Text style={recipesStyles.detailText}>{recipe.rating}</Text>
                       </View>
                     </View>

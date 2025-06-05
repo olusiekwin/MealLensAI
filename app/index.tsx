@@ -1,10 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, Dimensions, TextInput, StyleSheet } from 'react-native';
+// Import Platform for platform-specific code
+import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as SplashScreen from 'expo-splash-screen';
 import { Camera, ChevronRight, Search, Check } from 'lucide-react-native';
 import { onboardingStyles } from '@/styles/onboarding.styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -35,16 +38,51 @@ export default function OnboardingScreen() {
   const [cookingSkill, setCookingSkill] = useState<string>('');
   const [ingredientInput, setIngredientInput] = useState('');
   const [inputMethod, setInputMethod] = useState<string>('');
+  // Always ready to prevent loading issues
+  const [appIsReady, setAppIsReady] = useState(true);
 
-  const onLayoutRootView = useCallback(async () => {
-    await SplashScreen.hideAsync();
+  useEffect(() => {
+    // Hide splash screen immediately
+    SplashScreen.hideAsync().catch(e => {});
   }, []);
 
-  const handleNext = () => {
-    if (currentScreen < 3) {
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      try {
+        await SplashScreen.hideAsync();
+        console.log('✅ Main app: Splash screen hidden successfully');
+      } catch (e) {
+        console.warn('❌ Main app: Error hiding splash screen:', e);
+      }
+    }
+  }, [appIsReady]);
+
+  const handleNext = async () => {
+    if (currentScreen < 2) {
+      // Move to next onboarding screen
       setCurrentScreen(currentScreen + 1);
     } else {
-      router.push('/auth');
+      // Save onboarding completion status
+      try {
+        await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+        console.log('✅ Onboarding completed and saved to storage');
+        
+        // Save user preferences if they were selected
+        if (selectedPreferences.length > 0) {
+          await AsyncStorage.setItem('userPreferences', JSON.stringify(selectedPreferences));
+        }
+        
+        if (cookingSkill) {
+          await AsyncStorage.setItem('cookingSkill', cookingSkill);
+        }
+        
+        // Navigate to auth screen
+        router.replace('/auth');
+      } catch (error) {
+        console.error('❌ Error saving onboarding data:', error);
+        // Even if there's an error, try to proceed to auth
+        router.replace('/auth');
+      }
     }
   };
 
@@ -176,55 +214,68 @@ export default function OnboardingScreen() {
             </TouchableOpacity>
           </View>
         );
-      case 3:
-        return (
-          <View style={onboardingStyles.contentCard}>
-            <Text style={onboardingStyles.headingText}>
-              How would you like to find recipes?
-            </Text>
-            <Text style={onboardingStyles.descriptionText}>
-              Choose your preferred way to discover new recipes:
-            </Text>
-            
-            <View style={styles.inputMethodsContainer}>
-              <TouchableOpacity
-                style={styles.inputMethodCard}
-                onPress={() => selectInputMethod('camera')}
-              >
-                <View style={styles.inputMethodIconContainer}>
-                  <Camera size={32} color="#FF6A00" />
-                </View>
-                <Text style={styles.inputMethodTitle}>Snap a Photo</Text>
-                <Text style={styles.inputMethodDescription}>
-                  Take a picture of your ingredients or a meal to get recipe suggestions
-                </Text>
-                <View style={styles.inputMethodArrow}>
-                  <ChevronRight size={20} color="#FF6A00" />
-                </View>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.inputMethodCard}
-                onPress={() => selectInputMethod('text')}
-              >
-                <View style={styles.inputMethodIconContainer}>
-                  <Search size={32} color="#FF6A00" />
-                </View>
-                <Text style={styles.inputMethodTitle}>Type Ingredients</Text>
-                <Text style={styles.inputMethodDescription}>
-                  Enter the ingredients you have and we'll suggest recipes
-                </Text>
-                <View style={styles.inputMethodArrow}>
-                  <ChevronRight size={20} color="#FF6A00" />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
       default:
         return null;
     }
   };
+
+  // Fallback UI in case of rendering errors
+  const [hasError, setHasError] = useState(false);
+
+  // Simple error handler for the main component
+  useEffect(() => {
+    const handleError = (error: any) => {
+      console.error('Caught error in main component:', error);
+      setHasError(true);
+    };
+
+    // Use a safer approach for error handling that works across all React Native environments
+    const errorHandler = (error: Error, isFatal?: boolean) => {
+      handleError(error);
+      console.log('Error caught:', error.message, 'Fatal:', isFatal);
+    };
+    
+    // Set up error boundary
+    if (Platform.OS !== 'web') {
+      // Only use this approach on native platforms
+      const originalHandler = global.ErrorUtils?.getGlobalHandler?.();
+      
+      if (global.ErrorUtils?.setGlobalHandler) {
+        global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+          errorHandler(error, isFatal);
+          // Still call original handler if it exists
+          if (originalHandler) {
+            originalHandler(error, isFatal);
+          }
+        });
+      }
+      
+      return () => {
+        // Restore the original handler when component unmounts
+        if (global.ErrorUtils?.setGlobalHandler && originalHandler) {
+          global.ErrorUtils.setGlobalHandler(originalHandler);
+        }
+      };
+    }
+  }, []);
+
+  if (hasError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A1A1A' }}>
+        <Text style={{ color: '#000000', fontSize: 20, marginBottom: 10 }}>Something went wrong</Text>
+        <Text style={{ color: 'white', textAlign: 'center', marginBottom: 20 }}>The app encountered an error.</Text>
+        <TouchableOpacity 
+          style={{ padding: 12, backgroundColor: '#000000', borderRadius: 8 }}
+          onPress={() => {
+            setHasError(false);
+            window.location.reload();
+          }}
+        >
+          <Text style={{ color: 'white' }}>Reload App</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={onboardingStyles.container} onLayout={onLayoutRootView}>
@@ -301,7 +352,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   preferenceButtonSelected: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#202026',
   },
   preferenceButtonText: {
     fontSize: 14,
@@ -324,9 +375,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   skillButtonSelected: {
-    backgroundColor: '#FFF0E6',
+    backgroundColor: 'rgba(32, 32, 38, 0.1)',
     borderWidth: 1,
-    borderColor: '#FF6A00',
+    borderColor: '#202026',
   },
   skillButtonText: {
     fontSize: 16,
@@ -335,7 +386,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   skillButtonTextSelected: {
-    color: '#FF6A00',
+    color: '#202026',
     fontWeight: '600',
   },
   skillSelectedIndicator: {
@@ -345,7 +396,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#202026',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -369,7 +420,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   progressStepActive: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#202026',
     width: 24,
   },
   inputMethodsContainer: {
@@ -391,7 +442,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#FFF0E6',
+    backgroundColor: 'rgba(32, 32, 38, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,

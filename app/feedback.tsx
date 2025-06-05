@@ -54,7 +54,7 @@ export default function FeedbackScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <LinearGradient
-        colors={['#FF6A00', '#FF8F47']}
+        colors={['#000000', '#FF8F47']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -81,8 +81,8 @@ export default function FeedbackScreen() {
               >
                 <Star
                   size={40}
-                  color="#FF6A00"
-                  fill={rating >= star ? '#FF6A00' : 'none'}
+                  color="#000000"
+                  fill={rating >= star ? '#000000' : 'none'}
                 />
               </TouchableOpacity>
             ))}
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     color: '#202026',
   },
   submitButton: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     borderRadius: 30,
     height: 50,
     flexDirection: 'row',

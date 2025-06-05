@@ -22,7 +22,7 @@ export const plannerStyles = StyleSheet.create({
   favoritesLink: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FF6A00',
+    color: '#000000',
   },
   searchContainer: {
     paddingHorizontal: 17,
@@ -84,7 +84,7 @@ export const plannerStyles = StyleSheet.create({
     marginBottom: 5,
   },
   orangeCircle: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
   },
   preferenceText: {
     fontSize: 12,
@@ -161,7 +161,7 @@ export const plannerStyles = StyleSheet.create({
   dayNumber: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FF6A00',
+    color: '#000000',
     marginTop: 2,
   },
   activeDayText: {
@@ -170,7 +170,7 @@ export const plannerStyles = StyleSheet.create({
   activeDayNumber: {
     fontSize: 18,
     fontWeight: '500',
-    color: '#FF6A00',
+    color: '#000000',
     marginTop: 2,
   },
   mealTypeContainer: {

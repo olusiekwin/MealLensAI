@@ -73,7 +73,7 @@ export const recipeDetailsStyles = StyleSheet.create({
   },
   ratingIcon: {
     fontSize: 24,
-    color: "#FF6A00",
+    color: "#000000",
   },
   ratingText: {
     fontSize: 18,
@@ -111,7 +111,7 @@ export const recipeDetailsStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF6A00",
+    color: "#000000",
     marginBottom: 16,
   },
   ingredientsContainer: {

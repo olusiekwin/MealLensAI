@@ -84,7 +84,7 @@ export const nutritionalStyles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   activeTabButton: {
-    borderBottomColor: '#FF6A00',
+    borderBottomColor: '#000000',
   },
   tabText: {
     fontSize: 16,
@@ -92,7 +92,7 @@ export const nutritionalStyles = StyleSheet.create({
     color: '#6A6A6A',
   },
   activeTabText: {
-    color: '#FF6A00',
+    color: '#000000',
   },
   nutritionContainer: {
     paddingBottom: 30,
@@ -223,7 +223,7 @@ export const nutritionalStyles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     marginRight: 12,
   },
   ingredientName: {

@@ -194,7 +194,7 @@ export default function ResetPasswordScreen() {
               </View>
             ) : (
               <View style={resetPasswordStyles.successContainer}>
-                <CheckCircle size={80} color="#FF6A00" />
+                <CheckCircle size={80} color="#000000" />
                 <Text style={resetPasswordStyles.successTitle}>Password Reset!</Text>
                 <Text style={resetPasswordStyles.successDescription}>
                   Your password has been successfully reset. You can now log in with your new password.

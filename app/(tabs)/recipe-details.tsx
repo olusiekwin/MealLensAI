@@ -33,7 +33,7 @@ export default function RecipeDetailsScreen() {
             style={recipeDetailsStyles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft color="#FF6A00" size={24} />
+            <ArrowLeft color="#000000" size={24} />
           </TouchableOpacity>
           
           <View style={recipeDetailsStyles.headerActions}>
@@ -41,16 +41,16 @@ export default function RecipeDetailsScreen() {
               style={recipeDetailsStyles.actionButton}
               onPress={handleShare}
             >
-              <Share2 color="#FF6A00" size={20} />
+              <Share2 color="#000000" size={20} />
             </TouchableOpacity>
             <TouchableOpacity 
               style={recipeDetailsStyles.actionButton}
               onPress={() => setIsFavorite(!isFavorite)}
             >
               <Heart 
-                color="#FF6A00" 
+                color="#000000" 
                 size={20} 
-                fill={isFavorite ? "#FF6A00" : "transparent"} 
+                fill={isFavorite ? "#000000" : "transparent"} 
               />
             </TouchableOpacity>
           </View>

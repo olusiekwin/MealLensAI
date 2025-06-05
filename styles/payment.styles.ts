@@ -32,6 +32,69 @@ export const paymentStyles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
+  subscriptionStatusContainer: {
+    marginBottom: 24,
+  },
+  subscriptionStatusCard: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 15,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  subscriptionStatusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subscriptionStatusTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#202026',
+  },
+  subscriptionStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  premiumBadge: {
+    backgroundColor: '#000000',
+  },
+  freeBadge: {
+    backgroundColor: '#B5B5B5',
+  },
+  subscriptionStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  subscriptionDetail: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    marginBottom: 8,
+  },
+  subscriptionDetailLabel: {
+    fontWeight: '600',
+    color: '#202026',
+  },
+  historyToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    marginBottom: 16,
+  },
+  historyToggleText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#202026',
+  },
   scrollContainer: {
     flex: 1,
   },
@@ -82,7 +145,7 @@ export const paymentStyles = StyleSheet.create({
     position: 'relative',
   },
   selectedPlanCard: {
-    borderColor: '#FF6A00',
+    borderColor: '#000000',
     borderWidth: 2,
   },
   planHeader: {
@@ -135,7 +198,7 @@ export const paymentStyles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     right: -10,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -144,7 +207,7 @@ export const paymentStyles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     right: -10,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -175,7 +238,7 @@ export const paymentStyles = StyleSheet.create({
     marginBottom: 10,
   },
   selectedPaymentOption: {
-    borderColor: '#FF6A00',
+    borderColor: '#000000',
     borderWidth: 2,
     backgroundColor: 'rgba(255, 106, 0, 0.05)',
   },
@@ -206,7 +269,7 @@ export const paymentStyles = StyleSheet.create({
     marginLeft: 8,
   },
   selectedPaymentOptionText: {
-    color: '#FF6A00',
+    color: '#000000',
     fontWeight: '600',
   },
   cardSection: {
@@ -399,11 +462,11 @@ export const paymentStyles = StyleSheet.create({
   totalValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FF6A00',
+    color: '#000000',
   },
   payButton: {
     height: 60,
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',

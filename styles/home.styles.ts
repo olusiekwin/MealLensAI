@@ -200,7 +200,7 @@ export const homeStyles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 3,
-    borderColor: '#FF6A00',
+    borderColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -230,7 +230,7 @@ export const homeStyles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: '#FF6A00',
+    color: '#000000',
   },
   recipesContainer: {
     paddingRight: 20,
@@ -297,7 +297,7 @@ export const homeStyles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     width: 20,
   },
   loadingContainer: {

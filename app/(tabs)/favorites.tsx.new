@@ -1,0 +1,225 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
+import { favoritesStyles } from '../../styles/favorites.styles';
+import api from '../../services/api';
+import { useUserStore } from '../../context/userStore';
+import { Heart } from 'lucide-react-native';
+
+interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  prep_time: number;
+  cook_time: number;
+  servings: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: string[];
+  instructions: string[];
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export default function FavoritesScreen() {
+  const [favorites, setFavorites] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const router = useRouter();
+  const { isAuthenticated, user } = useUserStore();
+  const limit = 10; // Number of items per page
+
+  const fetchFavorites = async (isRefresh = false) => {
+    try {
+      const currentPage = isRefresh ? 1 : page;
+      setLoading(!isRefresh);
+      setError('');
+      
+      const response = await api.get('/favorites', {
+        params: { page: currentPage, limit }
+      });
+      
+      console.log('Favorites response:', response.data);
+      
+      if (response.data?.success) {
+        const newFavorites = response.data.data?.favorites || [];
+        const total = response.data.data?.pagination?.total || 0;
+        
+        setFavorites(prev => isRefresh ? newFavorites : [...prev, ...newFavorites]);
+        setHasMore(newFavorites.length === limit);
+        if (!isRefresh) setPage(prev => prev + 1);
+      } else {
+        setError(response.data?.error?.message || 'Failed to load favorites');
+        if (isRefresh) setFavorites([]);
+      }
+    } catch (err: any) {
+      console.error('Error fetching favorites:', err);
+      setError(err.message || 'An error occurred while fetching favorites');
+      setFavorites([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    fetchFavorites(true).finally(() => setRefreshing(false));
+  };
+  
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      fetchFavorites();
+    }
+  };
+  
+  const handleRetry = () => {
+    setError('');
+    fetchFavorites();
+  };
+
+  const removeFromFavorites = async (recipeId: string) => {
+    try {
+      const response = await api.delete(`/favorites/${recipeId}`);
+      if (response.data?.success) {
+        // Optimistically update UI
+        setFavorites(prev => prev.filter(recipe => recipe.id !== recipeId));
+        // Refresh data to ensure consistency
+        fetchFavorites(true);
+      } else {
+        throw new Error(response.data?.error?.message || 'Failed to remove from favorites');
+      }
+    } catch (err) {
+      console.error('Error removing from favorites:', err);
+      setError('Failed to remove from favorites. Please try again.');
+    }
+  };
+
+  const navigateToRecipe = (recipeId: string) => {
+    router.push(`/recipe/${recipeId}`);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchFavorites();
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <View style={favoritesStyles.container}>
+        <Text style={favoritesStyles.title}>Favorites</Text>
+        <Text style={favoritesStyles.subtitle}>Please log in to view your favorites.</Text>
+      </View>
+    );
+  }
+
+  if (loading && !refreshing) {
+    return (
+      <View style={favoritesStyles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6A00" />
+        <Text style={favoritesStyles.loadingText}>Loading your favorites...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={favoritesStyles.container}>
+        <Text style={favoritesStyles.title}>Oops!</Text>
+        <Text style={favoritesStyles.subtitle}>{error}</Text>
+        <TouchableOpacity style={favoritesStyles.retryButton} onPress={handleRetry}>
+          <Text style={favoritesStyles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (favorites.length === 0 && !loading) {
+    return (
+      <View style={favoritesStyles.container}>
+        <Text style={favoritesStyles.title}>No Favorites Yet</Text>
+        <Text style={favoritesStyles.subtitle}>
+          Save your favorite recipes to see them here!
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={favoritesStyles.pageContainer}>
+      <View style={favoritesStyles.header}>
+        <Text style={favoritesStyles.title}>Your Favorites</Text>
+        {loading && !refreshing && (
+          <ActivityIndicator size="small" color="#FF6A00" style={favoritesStyles.loadingIndicator} />
+        )}
+      </View>
+      
+      <FlatList
+        data={favorites}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={favoritesStyles.recipeCard}
+            onPress={() => navigateToRecipe(item.id)}
+          >
+            <Image
+              source={{ uri: item.image_url || 'https://via.placeholder.com/100' }}
+              style={favoritesStyles.recipeImage}
+              resizeMode="cover"
+            />
+            <View style={favoritesStyles.recipeInfo}>
+              <Text style={favoritesStyles.recipeTitle} numberOfLines={1}>
+                {item.title}
+              </Text>
+              <Text style={favoritesStyles.recipeDescription} numberOfLines={2}>
+                {item.description}
+              </Text>
+              <View style={favoritesStyles.recipeMetrics}>
+                <Text style={favoritesStyles.recipeMetric}>
+                  {item.prep_time + item.cook_time} min
+                </Text>
+                <Text style={favoritesStyles.recipeMetric}>
+                  {item.calories} cal
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={favoritesStyles.favoriteButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                removeFromFavorites(item.id);
+              }}
+            >
+              <Heart size={24} color="#FF6A00" fill="#FF6A00" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#FF6A00']}
+            tintColor="#FF6A00"
+          />
+        }
+        contentContainerStyle={favoritesStyles.listContent}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          hasMore && !loading ? (
+            <ActivityIndicator size="small" color="#FF6A00" style={favoritesStyles.footerLoader} />
+          ) : null
+        }
+      />
+    </View>
+  );
+}

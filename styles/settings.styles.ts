@@ -74,6 +74,27 @@ export const settingsStyles = StyleSheet.create({
     fontWeight: '500',
     color: '#202026',
   },
+  settingTextContainer: {
+    flex: 1,
+  },
+  subscriptionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  premiumBadge: {
+    backgroundColor: '#000000',
+  },
+  freeBadge: {
+    backgroundColor: '#B5B5B5',
+  },
+  subscriptionBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   valueContainer: {
     flexDirection: 'row',
     alignItems: 'center',

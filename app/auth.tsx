@@ -1,319 +1,520 @@
-import { useState } from 'react';
-import { 
-  Text, 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  ImageBackground, 
-  KeyboardAvoidingView, 
-  Platform,
-  ScrollView,
-  Image,
-  Alert,
-  ActivityIndicator
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react-native';
-import { authStyles } from '@/styles/auth.styles';
-import { authService } from '@/services/api';
+"use client"
 
-export default function AuthScreen() {
-  const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
-  const [generalError, setGeneralError] = useState('');
+import type React from "react"
+import { useState, useRef, useEffect } from "react"
+import { useUserStore } from "@/context/userStore"
+import {
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  Image,
+  Animated,
+  SafeAreaView,
+  StatusBar as RNStatusBar,
+} from "react-native"
+import { useRouter } from "expo-router"
+import { LinearGradient } from "expo-linear-gradient"
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from "lucide-react-native"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { authStyles } from "@/styles/auth.styles"
+import authService from "@/services/authService"
+
+export default function AuthScreen(): React.ReactElement {
+  const router = useRouter()
+  const [isLogin, setIsLogin] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [username, setUsername] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
+  const [generalError, setGeneralError] = useState("")
+  const [focusedInput, setFocusedInput] = useState<"email" | "password" | "confirmPassword" | "username" | null>(null)
+  const [canGoBack, setCanGoBack] = useState(false)
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(0.95)).current
+
+  useEffect(() => {
+    const fadeIn = () => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start()
+    }
+    fadeIn()
+
+    setCanGoBack(router.canGoBack())
+  }, [fadeAnim, scaleAnim])
 
   const validateForm = () => {
-    setGeneralError('');
-    setPasswordError('');
+    setGeneralError("")
+    setPasswordError("")
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!email.trim() || !emailRegex.test(email)) {
-      setGeneralError('Please enter a valid email address');
-      return false;
+      setGeneralError("Please enter a valid email address")
+      return false
     }
 
     // Password validation
     if (!password.trim() || password.length < 6) {
-      setGeneralError('Password must be at least 6 characters');
-      return false;
+      setGeneralError("Password must be at least 6 characters")
+      return false
     }
 
     // Registration-specific validations
     if (!isLogin) {
-      if (!name.trim()) {
-        setGeneralError('Please enter your name');
-        return false;
+      if (!username.trim()) {
+        setGeneralError("Please enter your username")
+        return false
       }
 
       if (password !== confirmPassword) {
-        setPasswordError("Passwords don't match");
-        return false;
+        setPasswordError("Passwords don't match")
+        return false
       }
     }
 
-    return true;
-  };
+    return true
+  }
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      return;
+      return
     }
 
-    setIsLoading(true);
-    
+    setIsLoading(true)
+    setGeneralError("")
+    setPasswordError("")
+
     try {
       if (isLogin) {
-        // Login
-        await authService.login({ email, password });
-        router.push('/(tabs)');
+        // Check if authService is defined before calling login
+        if (!authService || typeof authService.login !== "function") {
+          console.error("Auth service or login method is not available")
+          setGeneralError("Authentication service is not available. Please try again later.")
+          setIsLoading(false)
+          return
+        }
+
+        const response = await authService.login({
+          email,
+          password,
+        })
+
+        console.log("Login response:", response)
+
+        if (response.success && response.token) {
+          // Use userStore to handle authentication properly
+          console.log("✅ Auth: User logged in successfully with token:", response.token.substring(0, 10) + "...")
+
+          // Get user ID from response or use email as fallback
+          const userId = response.user?.id || email
+
+          // Initialize userStore with token and user ID
+          try {
+            await useUserStore.getState().login(response.token, userId)
+            console.log("✅ User store initialized with token and ID:", userId)
+
+            // Navigate to home tabs
+            router.replace("/(tabs)")
+          } catch (error) {
+            console.error("Failed to initialize user store:", error)
+            setGeneralError("Login successful but failed to load user data. Please try again.")
+          }
+        } else if (response.error?.code === "email_not_confirmed") {
+          setGeneralError("Please check your email to verify your account before logging in.")
+        } else if (response.error?.message) {
+          setGeneralError(response.error.message)
+          if (response.error.code === "invalid_credentials") {
+            setPasswordError("Invalid email or password")
+          }
+        } else {
+          setGeneralError("Login failed. Please try again.")
+        }
       } else {
-        // Register
-        await authService.register({ name, email, password, confirmPassword });
-        Alert.alert(
-          "Registration Successful",
-          "Your account has been created successfully!",
-          [{ text: "OK", onPress: () => router.push('/(tabs)') }]
-        );
+        const response = await authService.register({
+          email,
+          password,
+          confirm_password: confirmPassword,
+          username,
+        })
+
+        if (response.success) {
+          // Show verification modal
+          Alert.alert(
+            "Registration Successful!",
+            "Please check your email to verify your account. You will need to verify your email before you can log in.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  setIsLogin(true)
+                  setEmail("")
+                  setPassword("")
+                  setConfirmPassword("")
+                  setUsername("")
+                },
+              },
+            ],
+          )
+        } else if (response.error?.message) {
+          setGeneralError(response.error.message)
+          if (response.error.code === "email_taken") {
+            setGeneralError("This email is already registered. Please try logging in.")
+          }
+        } else {
+          setGeneralError("Registration failed. Please try again.")
+        }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setGeneralError(error.message);
+    } catch (error: any) {
+      console.error("Auth error:", error)
+      if (error.message === "Network Error") {
+        setGeneralError("Unable to connect to server. Please check your internet connection.")
+      } else if (error.response?.data?.error?.message) {
+        setGeneralError(error.response.data.error.message)
       } else {
-        setGeneralError('An unexpected error occurred');
+        setGeneralError("An error occurred. Please try again.")
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleForgotPassword = () => {
-    router.push('/auth/forgot-password');
-  };
+    router.push("/auth/forgot-password")
+  }
 
   const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
+    setIsLogin(!isLogin)
     // Clear fields when switching modes
-    setPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
-    setGeneralError('');
-  };
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+    setUsername("")
+    setPasswordError("")
+    setGeneralError("")
+  }
+
+  const handleSocialLogin = async (provider: "google") => {
+    try {
+      setIsLoading(true)
+      setGeneralError("")
+
+      const result = await authService.signInWithGoogle()
+
+      if (result?.token) {
+        router.replace("/(tabs)")
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error)
+      let errorMessage = `Failed to sign in with ${provider}.`
+      if (error instanceof Error) {
+        errorMessage = error.message || errorMessage
+      }
+      Alert.alert("Error", errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const goBack = () => {
-    router.back();
-  };
+    // Check if we can go back, otherwise navigate to a safe fallback
+    if (router.canGoBack()) {
+      router.back()
+    } else {
+      // Navigate to your app's main screen or home screen
+      router.replace("/(tabs)") // or wherever your main app screen is
+      // Alternative options:
+      // router.push('/') // if you have a home route
+      // router.replace('/welcome') // if you have a welcome screen
+    }
+  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={authStyles.container}
-    >
+    <SafeAreaView style={authStyles.container}>
+      {Platform.OS !== "web" && <RNStatusBar barStyle="light-content" />}
+
       <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80' }}
+        source={{
+          uri: "https://images.unsplash.com/photo-1495195134817-aeb325a55b65?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+        }}
         style={authStyles.backgroundImage}
+        resizeMode="cover"
       >
-        <LinearGradient
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)']}
-          style={authStyles.overlay}
-        >
-          <TouchableOpacity style={authStyles.backButton} onPress={goBack}>
-            <ArrowLeft color="#FFFFFF" size={24} />
-          </TouchableOpacity>
-          
-          <Text style={authStyles.appTitle}>MealLensAI</Text>
-          
-          <ScrollView 
-            contentContainerStyle={authStyles.scrollContent}
-            showsVerticalScrollIndicator={false}
+        <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.3)"]} style={authStyles.overlay}>
+          {/* Header with back button and logo */}
+          <View style={authStyles.header}>
+            {canGoBack && (
+              <TouchableOpacity style={authStyles.backButton} onPress={goBack}>
+                <ArrowLeft color="#FFFFFF" size={24} />
+              </TouchableOpacity>
+            )}
+
+            <View style={authStyles.logoContainer}>
+              <Image source={require("../assets/images/logo-2.svg")} style={authStyles.logo} resizeMode="contain" />
+            </View>
+          </View>
+
+          {/* Main content area */}
+          <KeyboardAvoidingView
+            style={authStyles.keyboardAvoidingView}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
           >
-            <View style={authStyles.formContainer}>
-              <Text style={authStyles.formTitle}>
-                {isLogin ? "Welcome Back" : "Create Account"}
-              </Text>
-              
-              {generalError ? (
-                <View style={authStyles.errorContainer}>
-                  <Text style={authStyles.errorText}>{generalError}</Text>
-                </View>
-              ) : null}
-              
-              {!isLogin && (
-                <View style={authStyles.inputContainer}>
-                  <Text style={authStyles.inputLabel}>Full Name</Text>
-                  <View style={authStyles.inputWrapper}>
-                    <User size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
-                    <TextInput
-                      style={authStyles.input}
-                      placeholder="Enter your full name"
-                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                      value={name}
-                      onChangeText={setName}
-                    />
+            <View style={authStyles.contentContainer}>
+              <Animated.View
+                style={[
+                  authStyles.formWrapper,
+                  {
+                    opacity: fadeAnim,
+                    transform: [{ scale: scaleAnim }],
+                  },
+                ]}
+              >
+                <View style={isLogin ? authStyles.formContainer : authStyles.formContainerRegister}>
+                  <Text style={isLogin ? authStyles.formTitle : authStyles.formTitleRegister}>
+                    {isLogin ? "Welcome Back" : "Create Account"}
+                  </Text>
+
+                  {generalError ? (
+                    <View style={isLogin ? authStyles.errorContainer : authStyles.errorContainerRegister}>
+                      <Text style={isLogin ? authStyles.errorText : authStyles.errorTextRegister}>{generalError}</Text>
+                    </View>
+                  ) : null}
+
+                  {!isLogin && (
+                    <View style={isLogin ? authStyles.inputContainer : authStyles.inputContainerRegister}>
+                      <Text style={isLogin ? authStyles.inputLabel : authStyles.inputLabelRegister}>Full Name</Text>
+                      <View
+                        style={[
+                          isLogin ? authStyles.inputWrapper : authStyles.inputWrapperRegister,
+                          focusedInput === "username" && authStyles.inputWrapperFocused,
+                        ]}
+                      >
+                        <User
+                          size={18}
+                          color={focusedInput === "username" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                          style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
+                        />
+                        <TextInput
+                          style={isLogin ? authStyles.input : authStyles.inputRegister}
+                          placeholder="Username"
+                          placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                          value={username}
+                          onFocus={() => setFocusedInput("username")}
+                          onBlur={() => setFocusedInput(null)}
+                          onChangeText={setUsername}
+                          textAlign="center"
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={isLogin ? authStyles.inputContainer : authStyles.inputContainerRegister}>
+                    <Text style={isLogin ? authStyles.inputLabel : authStyles.inputLabelRegister}>
+                      {isLogin ? "Email or Phone Number" : "Email Address"}
+                    </Text>
+                    <View
+                      style={[
+                        isLogin ? authStyles.inputWrapper : authStyles.inputWrapperRegister,
+                        focusedInput === "email" && authStyles.inputWrapperFocused,
+                      ]}
+                    >
+                      <Mail
+                        size={18}
+                        color={focusedInput === "email" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                        style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
+                      />
+                      <TextInput
+                        style={isLogin ? authStyles.input : authStyles.inputRegister}
+                        placeholder={isLogin ? "Enter your email" : "Enter your email address"}
+                        placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={email}
+                        onFocus={() => setFocusedInput("email")}
+                        onBlur={() => setFocusedInput(null)}
+                        onChangeText={setEmail}
+                        textAlign="center"
+                      />
+                    </View>
                   </View>
-                </View>
-              )}
-              
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.inputLabel}>
-                  {isLogin ? "Email or Phone Number" : "Email Address"}
-                </Text>
-                <View style={authStyles.inputWrapper}>
-                  <Mail size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
-                  <TextInput
-                    style={authStyles.input}
-                    placeholder={isLogin ? "Enter your email" : "Enter your email address"}
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={email}
-                    onChangeText={setEmail}
-                  />
-                </View>
-              </View>
-              
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.inputLabel}>Password</Text>
-                <View style={authStyles.inputWrapper}>
-                  <Lock size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
-                  <TextInput
-                    style={authStyles.input}
-                    placeholder="Enter your password"
-                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                  <TouchableOpacity 
-                    style={authStyles.eyeIcon}
-                    onPress={() => setShowPassword(!showPassword)}
+
+                  <View style={isLogin ? authStyles.inputContainer : authStyles.inputContainerRegister}>
+                    <Text style={isLogin ? authStyles.inputLabel : authStyles.inputLabelRegister}>Password</Text>
+                    <View
+                      style={[
+                        isLogin ? authStyles.inputWrapper : authStyles.inputWrapperRegister,
+                        focusedInput === "password" && authStyles.inputWrapperFocused,
+                      ]}
+                    >
+                      <Lock
+                        size={18}
+                        color={focusedInput === "password" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                        style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
+                      />
+                      <TextInput
+                        style={isLogin ? authStyles.input : authStyles.inputRegister}
+                        placeholder="Enter your password"
+                        placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                        secureTextEntry={!showPassword}
+                        value={password}
+                        onFocus={() => setFocusedInput("password")}
+                        onBlur={() => setFocusedInput(null)}
+                        onChangeText={setPassword}
+                        textAlign="center"
+                      />
+                      <TouchableOpacity
+                        style={isLogin ? authStyles.eyeIcon : authStyles.eyeIconRegister}
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={18} color="rgba(255, 255, 255, 0.7)" />
+                        ) : (
+                          <Eye size={18} color="rgba(255, 255, 255, 0.7)" />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+
+                    {isLogin && (
+                      <TouchableOpacity style={authStyles.forgotPassword} onPress={handleForgotPassword}>
+                        <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {!isLogin && (
+                    <View style={isLogin ? authStyles.inputContainer : authStyles.inputContainerRegister}>
+                      <Text style={isLogin ? authStyles.inputLabel : authStyles.inputLabelRegister}>
+                        Confirm Password
+                      </Text>
+                      <View
+                        style={[
+                          isLogin ? authStyles.inputWrapper : authStyles.inputWrapperRegister,
+                          focusedInput === "confirmPassword" && authStyles.inputWrapperFocused,
+                        ]}
+                      >
+                        <Lock
+                          size={18}
+                          color={focusedInput === "confirmPassword" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                          style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
+                        />
+                        <TextInput
+                          style={isLogin ? authStyles.input : authStyles.inputRegister}
+                          placeholder="Confirm your password"
+                          placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                          secureTextEntry={!showConfirmPassword}
+                          value={confirmPassword}
+                          onFocus={() => setFocusedInput("confirmPassword")}
+                          onBlur={() => setFocusedInput(null)}
+                          textAlign="center"
+                          onChangeText={(text) => {
+                            setConfirmPassword(text)
+                            if (passwordError && text === password) {
+                              setPasswordError("")
+                            }
+                          }}
+                        />
+                        <TouchableOpacity
+                          style={isLogin ? authStyles.eyeIcon : authStyles.eyeIconRegister}
+                          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff size={18} color="rgba(255, 255, 255, 0.7)" />
+                          ) : (
+                            <Eye size={18} color="rgba(255, 255, 255, 0.7)" />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                      {passwordError ? <Text style={authStyles.errorText}>{passwordError}</Text> : null}
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={[
+                      isLogin ? authStyles.submitButton : authStyles.submitButtonRegister,
+                      { backgroundColor: "#202026" },
+                    ]}
+                    onPress={handleSubmit}
+                    disabled={isLoading}
                   >
-                    {showPassword ? (
-                      <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" />
                     ) : (
-                      <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
+                      <Text style={isLogin ? authStyles.submitButtonText : authStyles.submitButtonTextRegister}>
+                        {isLogin ? "Sign In" : "Create Account"}
+                      </Text>
                     )}
                   </TouchableOpacity>
-                </View>
-                
-                {isLogin && (
-                  <TouchableOpacity 
-                    style={authStyles.forgotPassword}
-                    onPress={handleForgotPassword}
-                  >
-                    <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              
-              {!isLogin && (
-                <View style={authStyles.inputContainer}>
-                  <Text style={authStyles.inputLabel}>Confirm Password</Text>
-                  <View style={authStyles.inputWrapper}>
-                    <Lock size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
-                    <TextInput
-                      style={authStyles.input}
-                      placeholder="Confirm your password"
-                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                      secureTextEntry={!showConfirmPassword}
-                      value={confirmPassword}
-                      onChangeText={(text) => {
-                        setConfirmPassword(text);
-                        if (passwordError && text === password) {
-                          setPasswordError('');
-                        }
-                      }}
-                    />
-                    <TouchableOpacity 
-                      style={authStyles.eyeIcon}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+
+                  {/* Social Login Buttons */}
+                  <View style={isLogin ? authStyles.dividerContainer : authStyles.dividerContainerRegister}>
+                    <View style={authStyles.divider} />
+                    <Text style={isLogin ? authStyles.dividerText : authStyles.dividerTextRegister}>OR</Text>
+                    <View style={authStyles.divider} />
+                  </View>
+
+                  <View style={isLogin ? authStyles.socialButtonsContainer : authStyles.socialButtonsContainerRegister}>
+                    <TouchableOpacity
+                      style={isLogin ? authStyles.socialButton : authStyles.socialButtonRegister}
+                      onPress={() => handleSocialLogin("google")}
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
-                      ) : (
-                        <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
-                      )}
+                      <View style={isLogin ? authStyles.googleIconContainer : authStyles.googleIconContainerRegister}>
+                        <MaterialCommunityIcons name="google" size={16} color="#FFFFFF" />
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={isLogin ? authStyles.socialButton : authStyles.socialButtonRegister}
+                      onPress={() => handleSocialLogin("apple")}
+                    >
+                      <MaterialCommunityIcons name="apple" size={20} color="#FFFFFF" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={isLogin ? authStyles.socialButton : authStyles.socialButtonRegister}
+                      onPress={() => handleSocialLogin("facebook")}
+                    >
+                      <MaterialCommunityIcons name="facebook" size={20} color="#FFFFFF" />
                     </TouchableOpacity>
                   </View>
-                  {passwordError ? (
-                    <Text style={authStyles.errorText}>{passwordError}</Text>
-                  ) : null}
+
+                  <TouchableOpacity
+                    style={isLogin ? authStyles.switchModeContainer : authStyles.switchModeContainerRegister}
+                    onPress={toggleAuthMode}
+                  >
+                    <Text style={isLogin ? authStyles.switchModeText : authStyles.switchModeTextRegister}>
+                      {isLogin ? "Don't have an account? " : "Already have an account? "}
+                      <Text style={authStyles.switchModeHighlight}>{isLogin ? "Register" : "Login"}</Text>
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              )}
-              
-              <TouchableOpacity 
-                style={[
-                  authStyles.submitButton,
-                  isLoading && authStyles.submitButtonDisabled
-                ]} 
-                onPress={handleSubmit}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={authStyles.submitButtonText}>
-                    {isLogin ? "Login" : "Register"}
-                  </Text>
-                )}
-              </TouchableOpacity>
-              
-              <View style={authStyles.dividerContainer}>
-                <View style={authStyles.divider} />
-                <Text style={authStyles.dividerText}>OR</Text>
-                <View style={authStyles.divider} />
-              </View>
-              
-              <View style={authStyles.socialButtonsContainer}>
-                <TouchableOpacity style={authStyles.socialButton}>
-                  <Image 
-                    source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }} 
-                    style={authStyles.googleIcon} 
-                  />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={authStyles.socialButton}>
-                  <View style={authStyles.facebookIcon}>
-                    <Text style={authStyles.facebookIconText}>f</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={authStyles.socialButton}>
-                  <View style={authStyles.appleIcon}>
-                    <Image 
-                      source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Apple-logo.png' }} 
-                      style={authStyles.appleLogoIcon} 
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity 
-                style={authStyles.switchModeContainer} 
-                onPress={toggleAuthMode}
-              >
-                <Text style={authStyles.switchModeText}>
-                  {isLogin 
-                    ? "Don't have an account? " 
-                    : "Already have an account? "}
-                  <Text style={authStyles.switchModeHighlight}>
-                    {isLogin ? "Register" : "Login"}
-                  </Text>
-                </Text>
-              </TouchableOpacity>
+              </Animated.View>
             </View>
-          </ScrollView>
+          </KeyboardAvoidingView>
         </LinearGradient>
       </ImageBackground>
-    </KeyboardAvoidingView>
-  );
+    </SafeAreaView>
+  )
 }

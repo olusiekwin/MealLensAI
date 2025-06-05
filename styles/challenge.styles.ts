@@ -51,7 +51,7 @@ export const challengeStyles = StyleSheet.create({
   badgeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF6A00",
+    backgroundColor: "#000000",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -81,7 +81,7 @@ export const challengeStyles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#FF6A00",
+    backgroundColor: "#000000",
     borderRadius: 4,
   },
   progressText: {
@@ -132,7 +132,7 @@ export const challengeStyles = StyleSheet.create({
   challengeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF6A00",
+    backgroundColor: "#000000",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,

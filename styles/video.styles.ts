@@ -214,7 +214,7 @@ export const videoStyles = StyleSheet.create({
   webFallbackButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 30,

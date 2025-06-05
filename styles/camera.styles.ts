@@ -190,7 +190,7 @@ export const cameraStyles = StyleSheet.create({
     marginLeft: 8,
   },
   usePhotoButton: {
-    backgroundColor: '#FF6A00',
+    backgroundColor: '#000000',
   },
   usePhotoText: {
     color: '#FFFFFF',

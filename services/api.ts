@@ -1,232 +1,259 @@
-import axios from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '@/config/constants';
 import ENV from '../config/environment';
 
-const API_BASE_URL = ENV.API_URL;
+interface ApiError extends Error {
+  code?: string;
+  status?: number;
+  data?: any;
+}
 
-console.log('🔄 Initializing API with base URL:', API_BASE_URL);
+// Ensure the API URLs don't have trailing slashes to prevent path duplication
+const API_BASE_URL = ENV.API_URL.endsWith('/') ? ENV.API_URL.slice(0, -1) : ENV.API_URL;
+const REMOTE_API_BASE_URL = ENV.REMOTE_API_URL.endsWith('/') ? ENV.REMOTE_API_URL.slice(0, -1) : ENV.REMOTE_API_URL;
 
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 second timeout
+console.log('🔄 Initializing API with base URLs:', {
+  local: API_BASE_URL,
+  remote: REMOTE_API_BASE_URL
 });
 
-// Add request interceptor to add auth token to requests
-api.interceptors.request.use(
-  async (config) => {
-    console.log(`🔵 [API Request] ${config.method?.toUpperCase()} ${config.url}`);
-    const token = await AsyncStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+// Common Axios config
+const commonConfig: AxiosRequestConfig = {
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  timeout: ENV.API_TIMEOUT,
+  withCredentials: false,
+  validateStatus: (status) => status >= 200 && status < 500,
+  // Handle redirects manually
+  maxRedirects: 0,
+  // iOS simulator specific configuration
+  ...(Platform.OS === 'ios' && {
+    proxy: false,
+    insecureHTTPParser: true
+  })
+};
+
+// Create local API instance
+const localApi = axios.create({
+  ...commonConfig,
+  baseURL: API_BASE_URL,
+});
+
+// Create remote API instance
+const remoteApi = axios.create({
+  ...commonConfig,
+  baseURL: REMOTE_API_BASE_URL,
+});
+
+// Add interceptors to both API instances
+const addInterceptors = (apiInstance: AxiosInstance) => {
+  apiInstance.interceptors.request.use(
+    async (config) => {
+      console.log('🔵 [API Request]', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL,
+        headers: config.headers,
+        data: config.data
+      });
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (token !== null) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('🔑 Added auth token to request');
+        
+        // Log token details for debugging (first 10 chars only for security)
+        console.log(`Token prefix: ${token.substring(0, 10)}...`);
+        
+        // Check if this is a session token or JWT token
+        try {
+          const isJWT = token.split('.').length === 3;
+          console.log(`Token type: ${isJWT ? 'JWT' : 'Session token'}`);
+        } catch (e) {
+          console.log('Could not determine token type');
+        }
+      }
+      return config;
+    },
+    (error) => {
+      console.error('❌ [API Request Error]', error);
+      return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    console.error('❌ [API Request Error]:', error.message);
-    return Promise.reject(error);
-  }
-);
+  );
 
-// Add response interceptor for logging
-api.interceptors.response.use(
-  response => {
-    console.log(`🟢 [API Response] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`);
-    return response;
-  },
-  error => {
-    console.error('❌ [API Error]', error.config?.url + ':', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-    return Promise.reject(error);
-  }
-);
+  apiInstance.interceptors.response.use(
+    (response) => {
+      console.log('✅ [API Response]', {
+        url: response.config.url,
+        baseURL: response.config.baseURL,
+        status: response.status,
+        data: response.data
+      });
+      return response;
+    },
+    (error) => {
+      console.error('❌ [API Error]', {
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        headers: error.response?.headers
+      });
+      
+      // Create a custom error with additional properties
+      const apiError = new Error(error.message) as ApiError;
+      apiError.name = 'ApiError';
+      apiError.code = error.response?.data?.error?.code || error.code;
+      apiError.status = error.response?.status;
+      apiError.data = error.response?.data;
+      
+      return Promise.reject(apiError);
+    }
+  );
+};
 
-// Test backend connection
+// Add interceptors to both API instances
+addInterceptors(localApi);
+addInterceptors(remoteApi);
+
+// Smart API function that routes requests to the appropriate backend
+const api = {
+  async request(config: AxiosRequestConfig) {
+    const url = config.url || '';
+    
+    // Check if this service should use the remote backend
+    const useRemote = ENV.REMOTE_SERVICES.some(service => url.startsWith(service));
+    
+    try {
+      // Use the appropriate API instance
+      const apiInstance = useRemote ? remoteApi : localApi;
+      console.log(`🌐 Using ${useRemote ? 'remote' : 'local'} backend for ${url}`);
+      
+      // Try to make the request
+      const response = await apiInstance.request(config);
+      
+      // Check if we got a 404 response from the backend
+      if (response.status === 404 && response.data?.code === 404) {
+        console.warn(`⚠️ Backend endpoint not found: ${url}`);
+        
+        // Check if this service is mockable
+        const isMockable = ENV.MOCKABLE_SERVICES.some(service => url.includes(service));
+        if (isMockable) {
+          console.log(`📑 Using mock data for ${url}`);
+          return {
+            data: {
+              success: true,
+              message: 'Using mock data (backend unavailable)',
+              data: getMockDataForEndpoint(url)
+            },
+            status: 200
+          };
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      // Check if this is a network error (backend down)
+      if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
+        console.warn(`⚠️ Backend connection failed for ${url}`);
+        
+        // Check if this service is mockable
+        const isMockable = ENV.MOCKABLE_SERVICES.some(service => url.includes(service));
+        if (isMockable) {
+          console.log(`📑 Using mock data for ${url}`);
+          return {
+            data: {
+              success: true,
+              message: 'Using mock data (backend unavailable)',
+              data: getMockDataForEndpoint(url)
+            },
+            status: 200
+          };
+        }
+      }
+      
+      console.error(`❌ Error with ${url}:`, error);
+      throw error;
+    }
+  },
+  
+  // Standard HTTP methods
+  async get(url: string, config?: AxiosRequestConfig) {
+    return this.request({ ...config, method: 'get', url });
+  },
+  
+  async post(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.request({ ...config, method: 'post', url, data });
+  },
+  
+  async put(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.request({ ...config, method: 'put', url, data });
+  },
+  
+  async delete(url: string, config?: AxiosRequestConfig) {
+    return this.request({ ...config, method: 'delete', url });
+  },
+  
+  async patch(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.request({ ...config, method: 'patch', url, data });
+  },
+  
+  // Health check to determine if the backend is available
+  async healthCheck() {
+    try {
+      const response = await this.get('/health');
+      return response?.data?.status === 'healthy';
+    } catch (error) {
+      console.error('❌ Health check failed:', error);
+      return false;
+    }
+  }
+};
+
 export const testBackendConnection = async () => {
   try {
-    console.log('🔄 Testing backend connection to:', API_BASE_URL);
-    const response = await api.get('/debug/ping');
+    const response = await api.get('/health');
+    if (!response) {
+      throw new Error('No response received');
+    }
     console.log('✅ Backend connection successful:', response.data);
-    return response.data;
+    return {
+      success: true,
+      message: response.data?.message || 'Connected to backend',
+      data: response.data
+    };
   } catch (error: any) {
     console.error('❌ Backend connection failed:', {
-      url: API_BASE_URL,
-      error: error.message,
-      details: error.response?.data || 'No response data'
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
     });
-    throw error;
-  }
-};
-
-// Auth endpoints
-export const registerUser = async (userData: { 
-  email: string; 
-  password: string; 
-  confirm_password: string;
-  username: string; 
-}) => {
-  try {
-    console.log('🔄 Attempting user registration');
-    const response = await api.post('/auth/register', userData);
-    console.log('✅ Registration successful:', response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error('❌ Registration failed:', error.response?.data || error.message);
-    throw error;
-  }
-};
-
-export const loginUser = async (credentials: { email: string; password: string }) => {
-  try {
-    console.log('🔄 Attempting login');
-    const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      await AsyncStorage.setItem('auth_token', response.data.token);
-      console.log('✅ Login successful and token stored');
-    }
-    return response.data;
-  } catch (error: any) {
-    console.error('❌ Login failed:', error.response?.data || error.message);
-    throw error;
-  }
-};
-
-// Track app usage
-export const trackAppUsage = async () => {
-  try {
-    // Get current date as string (YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Get last usage date
-    const lastUsageDate = await AsyncStorage.getItem('last_usage_date');
-    
-    // Get total usage count
-    const totalCount = await AsyncStorage.getItem('usage_count');
-    const newTotalCount = totalCount ? parseInt(totalCount) + 1 : 1;
-    await AsyncStorage.setItem('usage_count', newTotalCount.toString());
-    
-    // Check if it's a new day
-    if (lastUsageDate !== today) {
-      // Reset daily count for new day
-      await AsyncStorage.setItem('daily_usage_count', '1');
-      await AsyncStorage.setItem('last_usage_date', today);
-      return { 
-        totalUsageCount: newTotalCount, 
-        dailyUsageCount: 1,
-        dailyLimitReached: false
-      };
-    } else {
-      // Increment daily usage count
-      const dailyCount = await AsyncStorage.getItem('daily_usage_count');
-      const newDailyCount = dailyCount ? parseInt(dailyCount) + 1 : 1;
-      await AsyncStorage.setItem('daily_usage_count', newDailyCount.toString());
-      
-      return { 
-        totalUsageCount: newTotalCount, 
-        dailyUsageCount: newDailyCount,
-        dailyLimitReached: newDailyCount > 3 // Daily limit is 3 uses
-      };
-    }
-  } catch (error) {
-    console.error('Error tracking app usage:', error);
-    return { 
-      totalUsageCount: 0, 
-      dailyUsageCount: 0,
-      dailyLimitReached: false,
-      error
+    return {
+      success: false,
+      message: error.message || 'Failed to connect to backend',
+      error: (error as any).response?.data || error.message
     };
   }
 };
 
-// Check if user has reached daily limit
-export const hasReachedDailyLimit = async () => {
-  try {
-    // Get current date as string (YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Get last usage date
-    const lastUsageDate = await AsyncStorage.getItem('last_usage_date');
-    
-    // If it's a new day, user hasn't reached limit
-    if (lastUsageDate !== today) return false;
-    
-    // Get daily usage count
-    const dailyCount = await AsyncStorage.getItem('daily_usage_count');
-    const dailyUsageCount = dailyCount ? parseInt(dailyCount) : 0;
-    
-    // Daily limit is 3 uses
-    return dailyUsageCount >= 3;
-  } catch (error) {
-    console.error('Error checking daily limit:', error);
-    return false;
-  }
-};
-
-// Add usage after watching an ad
-export const addUsageAfterAd = async () => {
-  try {
-    // Get current daily usage count
-    const dailyCount = await AsyncStorage.getItem('daily_usage_count');
-    const currentDailyCount = dailyCount ? parseInt(dailyCount) : 0;
-    
-    // If already at or above limit, reduce by 1 to allow one more use
-    if (currentDailyCount >= 3) {
-      await AsyncStorage.setItem('daily_usage_count', '2');
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error('Error adding usage after ad:', error);
-    return false;
-  }
-};
-
-// Get search results for a food item
 export const searchFood = async (query: string) => {
   try {
-    // This would be a real API call in production
-    // For now, we'll return mock data
-    return {
-      googleResults: [
-        {
-          title: `${query} recipes`,
-          link: `https://www.google.com/search?q=${encodeURIComponent(query)}+recipes`,
-          description: `Find the best ${query} recipes online`
-        },
-        {
-          title: `How to cook ${query}`,
-          link: `https://www.google.com/search?q=how+to+cook+${encodeURIComponent(query)}`,
-          description: `Learn different ways to prepare ${query}`
-        },
-        {
-          title: `${query} nutrition facts`,
-          link: `https://www.google.com/search?q=${encodeURIComponent(query)}+nutrition+facts`,
-          description: `Discover the nutritional value of ${query}`
-        }
-      ],
-      youtubeResults: [
-        {
-          title: `How to Cook Perfect ${query}`,
-          link: `https://www.youtube.com/results?search_query=how+to+cook+perfect+${encodeURIComponent(query)}`,
-          thumbnail: `https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg`
-        },
-        {
-          title: `Easy ${query} Recipe`,
-          link: `https://www.youtube.com/results?search_query=easy+${encodeURIComponent(query)}+recipe`,
-          thumbnail: `https://img.youtube.com/vi/xvFZjo5PgG0/hqdefault.jpg`
-        },
-        {
-          title: `${query} Cooking Tips`,
-          link: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}+cooking+tips`,
-          thumbnail: `https://img.youtube.com/vi/oHg5SJYRHA0/hqdefault.jpg`
-        }
-      ]
+    // Make a real API call to the backend
+    const response = await api.get('/search', {
+      params: { query }
+    });
+    
+    if (!response || !response.data) {
+      throw new Error('Invalid response from search API');
+    }
+    
+    return response.data.data || {
+      googleResults: [],
+      youtubeResults: []
     };
   } catch (error) {
     console.error('Error searching food:', error);
@@ -237,58 +264,161 @@ export const searchFood = async (query: string) => {
 // Analyze food from image
 export const analyzeFoodImage = async (imageBase64: string) => {
   try {
-    // This would be a real API call to an AI service in production
-    // For now, we'll return mock data
-    return {
-      detectedFood: "Avocado & Egg Sandwich",
-      ingredients: [
-        "2 slices of bread (whole-grain or sourdough)",
-        "1 ripe avocado (mashed or sliced)",
-        "2 boiled eggs (hard or soft boiled)",
-        "Salt and pepper",
-        "Lemon juice (optional)",
-        "Fresh herbs (optional)"
-      ],
-      cookingInstructions: [
-        "1. Toast the bread slices until golden brown.",
-        "2. Mash the avocado in a bowl and season with salt, pepper, and a splash of lemon juice if using.",
-        "3. Spread the avocado mixture evenly on both slices of toast.",
-        "4. Slice the boiled eggs and arrange them on top of the avocado.",
-        "5. Sprinkle with additional salt and pepper to taste.",
-        "6. Add fresh herbs if desired.",
-        "7. Serve immediately and enjoy!"
-      ],
-      recipeSuggestions: [
-        {
-          id: "1",
-          title: "Egg & Avocado Sandwich",
-          image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-          cookTime: "15 mins",
-          difficulty: "Easy",
-          rating: "4.2"
-        },
-        {
-          id: "2",
-          title: "Avocado Toast with Poached Eggs",
-          image: "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-          cookTime: "20 mins",
-          difficulty: "Medium",
-          rating: "4.5"
-        },
-        {
-          id: "3",
-          title: "Breakfast Burrito with Avocado",
-          image: "https://images.unsplash.com/photo-1584278860047-22db9ff82bed?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-          cookTime: "25 mins",
-          difficulty: "Medium",
-          rating: "4.7"
-        }
-      ]
+    // Make a real API call to the AI service
+    const response = await api.post('/detect/detect', {
+      image: imageBase64
+    });
+    
+    if (!response || !response.data) {
+      throw new Error('Invalid response from detection API');
+    }
+    
+    return response.data.data || {
+      detectedFood: "",
+      ingredients: [],
+      cookingInstructions: [],
+      recipeSuggestions: []
     };
   } catch (error) {
     console.error('Error analyzing food image:', error);
     throw new Error('Failed to analyze food image');
   }
+};
+
+// Function to get mock data for different endpoints
+const getMockDataForEndpoint = (url: string) => {
+  // Authentication endpoints
+  if (url.includes('/auth/login')) {
+    return {
+      success: true,
+      token: 'mock-jwt-token-for-testing',
+      user: {
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        username: 'testuser',
+        created_at: new Date().toISOString()
+      }
+    };
+  }
+  
+  // User profile endpoints
+  if (url.includes('/user/profile')) {
+    return {
+      user: {
+        id: 'mock-user-id',
+        email: 'test@example.com',
+        username: 'testuser',
+        first_name: 'Test',
+        last_name: 'User',
+        date_of_birth: '1990-01-01',
+        gender: 'prefer not to say',
+        address: '123 Test St',
+        location: 'Test City',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    };
+  }
+  
+  // User preferences
+  if (url.includes('/user/preferences')) {
+    return {
+      preferences: {
+        dietaryRestrictions: ['vegetarian'],
+        cookingSkillLevel: 'intermediate',
+        favorites: []
+      }
+    };
+  }
+  
+  // Payment/subscription
+  if (url.includes('/payment/subscription-status')) {
+    return {
+      status: 'free',
+      expiry_date: null,
+      remaining_detections: 3,
+      max_detections: 3
+    };
+  }
+  
+  // Detection endpoints
+  if (url.includes('/detect/process') || url.includes('/process')) {
+    return {
+      analysis_id: 'mock-analysis-id',
+      response: ['chicken', 'rice', 'onions', 'garlic', 'olive oil'],
+      food_suggestions: ['Chicken Fried Rice', 'Chicken Pilaf', 'Chicken Risotto']
+    };
+  }
+  
+  if (url.includes('/detect/instructions') || url.includes('/instructions')) {
+    return {
+      title: 'Chicken Fried Rice',
+      ingredients: [
+        '2 cups cooked rice',
+        '1 chicken breast, diced',
+        '1 onion, chopped',
+        '2 cloves garlic, minced',
+        '2 tbsp olive oil',
+        'Salt and pepper to taste'
+      ],
+      steps: [
+        { text: 'Heat oil in a large pan over medium heat.' },
+        { text: 'Add chicken and cook until no longer pink, about 5-7 minutes.' },
+        { text: 'Add onions and garlic, cook until softened.' },
+        { text: 'Add rice and stir to combine. Cook for 3-5 minutes.' },
+        { text: 'Season with salt and pepper to taste.' },
+        { text: 'Serve hot.' }
+      ],
+      tips: [
+        { text: 'For extra flavor, add soy sauce or oyster sauce.' },
+        { text: 'You can add vegetables like peas, carrots, or bell peppers.' }
+      ],
+      estimatedTime: 20,
+      difficulty: 'Easy'
+    };
+  }
+  
+  if (url.includes('/detect/resources') || url.includes('/resources')) {
+    return {
+      YoutubeSearch: [
+        { title: 'Easy Chicken Fried Rice Recipe', link: 'https://www.youtube.com/watch?v=mock1' },
+        { title: 'How to Make Perfect Fried Rice', link: 'https://www.youtube.com/watch?v=mock2' },
+        { title: 'Quick Chicken Fried Rice', link: 'https://www.youtube.com/watch?v=mock3' }
+      ],
+      GoogleSearch: [
+        { title: 'Best Chicken Fried Rice Recipe', description: 'A delicious and easy recipe...', link: 'https://www.example.com/recipe1' },
+        { title: 'Authentic Chicken Fried Rice', description: 'Learn how to make authentic...', link: 'https://www.example.com/recipe2' },
+        { title: '30-Minute Chicken Fried Rice', description: 'Quick and tasty recipe...', link: 'https://www.example.com/recipe3' }
+      ]
+    };
+  }
+  
+  if (url.includes('/detect/history')) {
+    return [
+      {
+        detection_id: 'mock-detection-1',
+        user_id: 'mock-user-id',
+        detection_type: 'image',
+        items: ['chicken', 'rice', 'vegetables'],
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+        is_favorite: false
+      },
+      {
+        detection_id: 'mock-detection-2',
+        user_id: 'mock-user-id',
+        detection_type: 'text',
+        items: ['pasta', 'tomatoes', 'basil'],
+        created_at: new Date(Date.now() - 172800000).toISOString(),
+        is_favorite: true
+      }
+    ];
+  }
+  
+  // Default mock data
+  return {
+    message: 'Mock data for endpoint not specifically defined',
+    endpoint: url
+  };
 };
 
 export default api;

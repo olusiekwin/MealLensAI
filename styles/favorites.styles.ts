@@ -1,0 +1,147 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
+export const favoritesStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    padding: 16,
+  },
+  pageContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  loadingIndicator: {
+    marginLeft: 8,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#202026',
+    marginBottom: 16,
+    marginLeft: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6A6A6A',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+    marginBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6A6A6A',
+    marginTop: 12,
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+  footerLoader: {
+    marginVertical: 16,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    width: '100%',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#dc3545',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  recipeCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  recipeImage: {
+    width: 100,
+    height: 100,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  recipeInfo: {
+    flex: 1,
+    padding: 12,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#202026',
+    marginBottom: 4,
+  },
+  recipeDescription: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    marginBottom: 8,
+  },
+  recipeMetrics: {
+    flexDirection: 'row',
+  },
+  recipeMetric: {
+    fontSize: 12,
+    color: '#000000',
+    marginRight: 12,
+    fontWeight: '500',
+  },
+  favoriteButton: {
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
+  retryButton: {
+    backgroundColor: '#000000',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});

@@ -1,10 +1,14 @@
-import { Text, View, ScrollView, Image, TouchableOpacity, Alert, Dimensions } from "react-native";
+import { Text, View, ScrollView, Image, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from "react-native";
 import { Search, Bell, ChevronDown, Star, Heart } from "lucide-react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { homeStyles } from "@/styles/home.styles";
 import { useState, useEffect } from "react";
-import { trackAppUsage, hasReachedDailyLimit } from "@/services/api";
+import { useUserStore } from '@/context/userStore';
+import { useAdStore } from '@/context/adStore';
+import SubscriptionPrompt from '@/components/SubscriptionPrompt';
+import UsageLimitBanner from '@/components/UsageLimitBanner';
+import AdBanner from '@/components/AdBanner';
 
 const { width } = Dimensions.get('window');
 
@@ -12,88 +16,112 @@ export default function HomeScreen() {
   const router = useRouter();
   const [hasNotifications, setHasNotifications] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [recentDetections, setRecentDetections] = useState<any[]>([]);
+  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+
+  const { 
+    profile, 
+    usage, 
+    subscription, 
+    trackUsage, 
+    isLoading: isUserLoading,
+    fetchProfile
+  } = useUserStore();
+  
+  const { fetchAds, shouldShowAds } = useAdStore();
 
   useEffect(() => {
-    const checkUsage = async () => {
+    const initialize = async () => {
       setIsLoading(true);
       try {
-        // Check if user has reached daily limit
-        const reachedLimit = await hasReachedDailyLimit();
-        if (reachedLimit) {
-          // If limit reached, we'll let the root layout handle the popup
-          console.log('Daily limit reached');
+        // Fetch user profile if authenticated
+        await fetchProfile();
+        
+        // Fetch ads if user is not premium
+        if (subscription.status !== 'premium') {
+          await fetchAds();
+          
+          // Randomly decide to show subscription prompt (20% chance)
+          // This creates a non-intrusive experience while still promoting premium
+          if (Math.random() < 0.2) {
+            setShowSubscriptionPrompt(true);
+          }
         }
       } catch (error) {
-        console.error('Error checking usage:', error);
+        console.error('Error initializing home screen:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkUsage();
+    initialize();
   }, []);
 
   const handleFoodFinderPress = async () => {
     try {
       // Track usage before navigating
-      const usageStatus = await trackAppUsage();
+      await trackUsage();
       
-      if (usageStatus.dailyLimitReached) {
-        // Let the root layout handle the popup
-        Alert.alert(
-          'Daily Limit Reached',
-          'You have used your 3 free scans for today. Please try again tomorrow or watch an ad to continue.',
-          [
-            { 
-              text: 'Watch Ad', 
-              onPress: () => handleWatchAd() 
-            },
-            { 
-              text: 'OK', 
-              style: 'cancel' 
-            }
-          ]
-        );
+      // Check if daily limit is reached
+      if (usage.reachedDailyLimit && subscription.status === 'free') {
+        // Let the UsageLimitBanner handle this
         return;
       }
       
-      // If no limits reached, navigate to camera
-      router.push('/camera?mode=food');
+      // Prompt user to choose detection method
+      Alert.alert(
+        "Food Finder",
+        "Would you like to detect ingredients using text or image? Results will be saved to your Detection History.",
+        [
+          {
+            text: "Text",
+            onPress: () => router.push('/text-detection?mode=food')
+          },
+          {
+            text: "Image",
+            onPress: () => router.push('/camera?mode=food' as any)
+          }
+        ],
+        { cancelable: true }
+      );
     } catch (error) {
       console.error('Error tracking usage:', error);
-      router.push('/camera?mode=food');
+      // Default to camera if there's an error
+      router.push('/camera?mode=food' as any);
     }
   };
 
   const handleRecipeFinderPress = async () => {
     try {
       // Track usage before navigating
-      const usageStatus = await trackAppUsage();
+      await trackUsage();
       
-      if (usageStatus.dailyLimitReached) {
-        // Let the root layout handle the popup
-        Alert.alert(
-          'Daily Limit Reached',
-          'You have used your 3 free scans for today. Please try again tomorrow or watch an ad to continue.',
-          [
-            { 
-              text: 'Watch Ad', 
-              onPress: () => handleWatchAd() 
-            },
-            { 
-              text: 'OK', 
-              style: 'cancel' 
-            }
-          ]
-        );
+      // Check if daily limit is reached
+      if (usage.reachedDailyLimit && subscription.status === 'free') {
+        // Let the UsageLimitBanner handle this
         return;
       }
       
-      // If no limits reached, navigate to camera
-      router.push('/camera?mode=recipe');
+      // Prompt user to choose detection method
+      Alert.alert(
+        "Recipe Finder",
+        "Would you like to detect recipes using text or image? Results will be saved to your Detection History.",
+        [
+          {
+            text: "Text",
+            onPress: () => router.push('/text-detection?mode=recipe')
+          },
+          {
+            text: "Image",
+            onPress: () => router.push('/camera?mode=recipe' as any)
+          }
+        ],
+        { cancelable: true }
+      );
     } catch (error) {
       console.error('Error tracking usage:', error);
-      router.push('/camera?mode=recipe');
+      // Default to camera if there's an error
+      router.push('/camera?mode=recipe' as any);
     }
   };
   
@@ -122,9 +150,10 @@ export default function HomeScreen() {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || isUserLoading) {
     return (
       <View style={homeStyles.loadingContainer}>
+        <ActivityIndicator size="large" color="#000000" />
         <Text style={homeStyles.loadingText}>Loading...</Text>
       </View>
     );
@@ -138,14 +167,14 @@ export default function HomeScreen() {
       >
         {/* Header Section */}
         <LinearGradient
-          colors={['#FF6A00', '#FF8F47']}
+          colors={['#000000', '#FF8F47']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={homeStyles.headerGradient}
         >
           <View style={homeStyles.headerContent}>
             <View>
-              <Text style={homeStyles.greeting}>Hi, Frank Mount</Text>
+              <Text style={homeStyles.greeting}>Hi, {profile?.name?.split(' ')[0] || 'there'}</Text>
               <Text style={homeStyles.welcomeBack}>Welcome back!</Text>
             </View>
             <View style={homeStyles.headerIcons}>
@@ -193,6 +222,20 @@ export default function HomeScreen() {
             <Text style={homeStyles.finderText}>Food Finder</Text>
           </TouchableOpacity>
         </View>
+        
+        {/* Contextual Subscription Prompt (shows occasionally) */}
+        {showSubscriptionPrompt && (
+          <SubscriptionPrompt 
+            contextType="general" 
+            onDismiss={() => setShowSubscriptionPrompt(false)} 
+          />
+        )}
+        
+        {/* Usage Limit Banner if limit reached */}
+        <UsageLimitBanner />
+        
+        {/* Ad Banner for free users */}
+        {shouldShowAds && <AdBanner position="banner" />}
         
         {/* Featured Dish and Cooking Streak Cards */}
         <View style={homeStyles.featuredStreakContainer}>
@@ -259,7 +302,7 @@ export default function HomeScreen() {
                       <Text style={homeStyles.detailText}>{recipe.time}</Text>
                     </View>
                     <View style={homeStyles.recipeDetail}>
-                      <Star size={12} color="#FF6A00" fill="#FF6A00" />
+                      <Star size={12} color="#000000" fill="#000000" />
                       <Text style={homeStyles.detailText}>{recipe.rating}</Text>
                     </View>
                   </View>

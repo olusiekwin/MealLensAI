@@ -14,6 +14,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { cameraStyles } from '@/styles/camera.styles';
 import { hasReachedDailyLimit } from '@/services/api';
+import * as FileSystem from 'expo-file-system';
+import { aiService } from '@/services/aiService';
+import { useAdStore } from '@/context/adStore';
+import LoadingScreen from '@/components/LoadingScreen';
+import AnalysisLoadingScreen from '@/components/AnalysisLoadingScreen';
+import AdPlaceholder from '@/components/AdPlaceholder';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -21,18 +27,20 @@ export default function CameraScreen() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAd, setShowAd] = useState(false);
   const [mode, setMode] = useState<'food' | 'recipe'>('food');
   const cameraRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { fetchAds, shouldShowAds } = useAdStore();
 
   useEffect(() => {
     if (params.mode === 'food' || params.mode === 'recipe') {
       setMode(params.mode as 'food' | 'recipe');
     }
     
-    // Check if user has reached daily limit
-    checkDailyLimit();
+    // Skip daily limit check for now
+  // checkDailyLimit();
   }, [params]);
 
   const checkDailyLimit = async () => {
@@ -98,16 +106,18 @@ export default function CameraScreen() {
     setIsCapturing(true);
     
     try {
-      // This is a mock since we can't actually take a photo in the simulator
-      // In a real app, you would use cameraRef.current.takePictureAsync()
-      setTimeout(() => {
-        // Simulate capturing an image
-        setCapturedImage('https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-        setIsCapturing(false);
-      }, 1000);
+      // Take a photo using the camera
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        base64: true,
+        exif: false
+      });
+      
+      setCapturedImage(photo.uri);
     } catch (error) {
       console.error('Failed to take picture:', error);
       Alert.alert('Error', 'Failed to take picture');
+    } finally {
       setIsCapturing(false);
     }
   };
@@ -124,10 +134,11 @@ export default function CameraScreen() {
 
     // Launch image picker
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled) {
@@ -139,21 +150,94 @@ export default function CameraScreen() {
     setCapturedImage(null);
   };
 
-  const handleUsePhoto = () => {
+  const analyzeImage = async () => {
+    if (!capturedImage) return;
+    
     setIsAnalyzing(true);
     
-    // Simulate analyzing the image
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      
-      // Navigate to AI chat with detected food
-      router.push({
-        pathname: '/ai-chat',
-        params: { 
-          foodName: mode === 'food' ? 'Avocado & Egg Sandwich' : 'Pancakes with Fruits & Caramel Syrup'
-        }
+    try {
+      // Encode image to base64
+      const base64 = await FileSystem.readAsStringAsync(capturedImage, {
+        encoding: FileSystem.EncodingType.Base64,
       });
-    }, 2000);
+      
+      // First, check with backend if we should show an ad (premium status check)
+      // This leverages the backend to make the decision rather than frontend
+      const api = require('@/services/api').default;
+      
+      // Request ad from backend if needed - backend will determine if user should see ads
+      if (shouldShowAds) {
+        try {
+          const adResponse = await api.get('/ads/should-display', {
+            params: { context: 'detection', mode }
+          });
+          
+          if (adResponse.data && adResponse.data.showAd) {
+            // Show ad from backend or placeholder
+            setShowAd(true);
+            // Wait for ad display duration
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            setShowAd(false);
+            
+            // Notify backend that ad was viewed
+            await api.post('/ads/viewed', { 
+              adId: adResponse.data.adId || 'placeholder',
+              context: 'detection'
+            }).catch(err => console.log('Ad view tracking error:', err));
+          }
+        } catch (error) {
+          console.log('Ad service error, continuing with analysis:', error);
+        }
+      }
+      
+      // Call backend API based on mode - letting backend handle the heavy processing
+      if (mode === 'food') {
+        // Send image to backend for processing
+        const result = await api.post('/analysis/food', { 
+          image: base64,
+          saveHistory: true
+        });
+        
+        if (result.data && result.data.success) {
+          router.push({
+            pathname: '/(tabs)/nutritional-breakdown',
+            params: { 
+              imageUri: capturedImage,
+              analysisId: result.data.id || result.data.analysisId
+            }
+          });
+        } else {
+          Alert.alert('Error', result.data?.error || 'Failed to analyze image');
+        }
+      } else if (mode === 'recipe') {
+        // Send image to backend for recipe processing
+        const result = await api.post('/analysis/recipe', { 
+          image: base64,
+          saveHistory: true
+        });
+        
+        if (result.data && result.data.success) {
+          router.push({
+            pathname: '/(tabs)/recipes',
+            params: { 
+              imageUri: capturedImage,
+              analysisId: result.data.id || result.data.analysisId
+            }
+          });
+        } else {
+          Alert.alert('Error', result.data?.error || 'Failed to analyze recipe image');
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      Alert.alert(
+        'Analysis Failed',
+        error.message || 'Failed to analyze image. Please try again.'
+      );
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleBack = () => {
@@ -162,6 +246,11 @@ export default function CameraScreen() {
 
   return (
     <View style={cameraStyles.container}>
+      {/* Analysis Loading Overlay */}
+      {isAnalyzing && !showAd && <AnalysisLoadingScreen message="Analyzing your image..." />}
+      
+      {/* Ad Placeholder */}
+      {showAd && <AdPlaceholder onClose={() => setShowAd(false)} />}
       {capturedImage ? (
         <View style={cameraStyles.previewContainer}>
           <Image 

@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
 
 export const recipesStyles = StyleSheet.create({
   container: {
@@ -34,6 +36,42 @@ export const recipesStyles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     marginBottom: 15,
+  },
+  textInputContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#202026',
+    marginBottom: 8,
+  },
+  textInputWrapper: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  textInputField: {
+    fontSize: 16,
+    color: '#202026',
+    minHeight: 80,
+  },
+  detectButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  detectButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
   },
   searchBar: {
     flexDirection: 'row',
@@ -204,6 +242,139 @@ export const recipesStyles = StyleSheet.create({
   favoriteDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 10,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#6E6E6E',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  emptyStateButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  emptyStateButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emptyStateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  loginButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginHorizontal: 16,
+    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  detectionsList: {
+    paddingHorizontal: 16,
+  },
+  detectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  detectionImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  detectionInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  detectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 4,
+  },
+  detectionItems: {
+    fontSize: 14,
+    color: '#6E6E6E',
+    marginBottom: 4,
+  },
+  detectionDate: {
+    fontSize: 12,
+    color: '#B5B5B5',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#202026',
+    marginLeft: 8,
   },
   favoriteHeartButton: {
     position: 'absolute',
