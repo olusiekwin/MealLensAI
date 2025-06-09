@@ -15,7 +15,7 @@ import {
   GOOGLE_CONFIG,
   STORAGE_KEYS,
   API_URL
-} from '../config/constants';
+} from '../constants';
 
 // Initialize WebBrowser for OAuth
 WebBrowser.maybeCompleteAuthSession();
@@ -245,47 +245,41 @@ class AuthService {
 
   // Google Sign-In using OAuth
   async signInWithGoogle() {
+    const clientId = GOOGLE_CONFIG.WEB_CLIENT_ID;
+    if (!clientId) {
+      throw new Error("Google Web Client ID is not configured in .env file.");
+    }
+    
     try {
-      // Configure Google OAuth request
       const discovery = await AuthSession.fetchDiscoveryAsync('https://accounts.google.com');
-      
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'meallensai',
-        path: 'auth/google/callback'
-      });
-
-      const clientId = IS_WEB 
-        ? GOOGLE_CONFIG.webClientId 
-        : IS_IOS 
-          ? GOOGLE_CONFIG.iosClientId 
-          : GOOGLE_CONFIG.androidClientId;
-
       const authRequest = new AuthSession.AuthRequest({
-        clientId,
-        redirectUri,
         responseType: ResponseType.Code,
-        scopes: GOOGLE_CONFIG.scopes,
-        usePKCE: true,
+        clientId: clientId,
+        scopes: ['profile', 'email'],
+        redirectUri: AuthSession.makeRedirectUri({
+          scheme: 'meallensai',
+          path: 'auth'
+        }),
       });
 
-      const result = await authRequest.promptAsync(discovery);
-
-      if (result.type === 'success' && result.params.code) {
-        // Exchange code for token with your backend
-        const response = await api.post('/api/v1/auth/google/callback', {
-          code: result.params.code,
-          redirect_uri: redirectUri
-        });
-
-        if (response.data.success && response.data.session?.access_token) {
-          await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.session.access_token);
-          return { success: true, token: response.data.session.access_token };
+      // Prompt user to sign in
+      const authResult = await authRequest.promptAsync(discovery);
+      
+      if (authResult.type === 'success') {
+        const { code } = authResult.params;
+        
+        // Exchange code for tokens with backend
+        const response = await api.post('/auth/google/callback', { code });
+        
+        if (response.data?.token) {
+          await AsyncStorage.setItem('auth_token', response.data.token);
+          return { token: response.data.token };
         }
       }
-
-      throw new Error('Google authentication failed');
-    } catch (error: any) {
-      console.error('❌ Google sign-in error:', error);
+      
+      return null;
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
       throw error;
     }
   }
