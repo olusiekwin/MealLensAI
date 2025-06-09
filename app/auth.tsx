@@ -16,7 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from 'lucide-react-native';
 import { authStyles } from '@/styles/auth.styles';
-import { authService } from '@/services/api';
+import { authService } from '@/services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AuthScreen() {
@@ -151,11 +151,54 @@ export default function AuthScreen() {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     // Clear fields when switching modes
-    setPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
-    setGeneralError('');
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+    setUsername("")
+    setPasswordError("")
+    setGeneralError("")
   };
+
+  const handleSocialLogin = async (provider: "google" | "apple" | "facebook") => {
+    try {
+      setIsLoading(true)
+      setGeneralError("")
+
+      let result
+
+      switch (provider) {
+        case "google":
+          result = await authService.signInWithGoogle()
+          break
+        case "apple":
+          // Assuming authService has signInWithApple - based on socialAuthService.ts
+          // result = await authService.signInWithApple();
+          console.warn("Apple Sign In is not fully integrated in authService yet.")
+          Alert.alert("Coming Soon!", "Apple Sign-In is not available yet.")
+          break
+        case "facebook":
+          // Assuming authService will have signInWithFacebook
+          console.warn("Facebook Sign In is not implemented yet.")
+          Alert.alert("Coming Soon!", "Facebook Sign-In is not available yet.")
+          break
+        default:
+          throw new Error("Unsupported provider")
+      }
+
+      if (result?.token) {
+        router.replace("/(tabs)")
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error)
+      let errorMessage = `Failed to sign in with ${provider}.`
+      if (error instanceof Error) {
+        errorMessage = error.message || errorMessage
+      }
+      Alert.alert("Error", errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const goBack = () => {
     if (router.canGoBack()) {
@@ -204,12 +247,12 @@ export default function AuthScreen() {
               {!isLogin && (
                 <View style={authStyles.inputContainer}>
                   <Text style={authStyles.inputLabel}>Full Name</Text>
-                  <View style={authStyles.inputField}>
-                    <User size={20} color="rgba(255, 255, 255, 0.7)" style={authStyles.inputIcon} />
+                  <View style={authStyles.inputWrapper}>
+                    <User style={authStyles.inputIcon} color="#FFFFFF" size={20} />
                     <TextInput
                       style={authStyles.input}
-                      placeholder="Enter your username"
-                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                      placeholder="Username"
+                      placeholderTextColor="rgba(255, 255, 255, 0.6)"
                       value={username}
                       onChangeText={setUsername}
                       autoCapitalize="none"
