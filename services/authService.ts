@@ -109,6 +109,21 @@ class AuthService {
     }
   }
 
+  // Resend confirmation email
+  async resendConfirmationEmail(email: string) {
+    try {
+      console.log(`🔄 Resending confirmation for: ${email}`);
+      const response = await retryRequest(() => 
+        api.post('/auth/resend-confirmation-email', { email })
+      );
+      console.log('✅ Confirmation email resent:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Resend confirmation failed:', error.response?.data || error.message);
+      throw error.response?.data?.error || 'Failed to resend confirmation email';
+    }
+  }
+
   // Login user
   async login(userData: LoginData): Promise<AuthResponse> {
     try {

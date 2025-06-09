@@ -1,9 +1,8 @@
-import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
+import { Stack, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Text, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions, Alert } from "react-native";
-import { useRouter } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Star, CheckCircle2, Clock, Zap } from "lucide-react-native";
 

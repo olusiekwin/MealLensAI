@@ -32,6 +32,7 @@ export default function AuthScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [generalError, setGeneralError] = useState('');
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
 
   const validateForm = () => {
     setGeneralError('');
@@ -73,6 +74,7 @@ export default function AuthScreen() {
 
     setIsLoading(true);
     setGeneralError(''); // Clear previous general errors
+    setEmailNotConfirmed(false);
     
     try {
       if (isLogin) {
@@ -87,7 +89,20 @@ export default function AuthScreen() {
           router.push('/(tabs)');
         } else {
           // Handle case where token is not in response or responseData is falsy
-          setGeneralError(responseData?.message || 'Login failed. Please try again.');
+          const error = responseData?.error || responseData?.message;
+          let errorMessage = 'Login failed. Please try again.';
+          
+          if (typeof error === 'string') {
+            errorMessage = error;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          setGeneralError(errorMessage);
+          
+          if (errorMessage.toLowerCase().includes('email not confirmed')) {
+            setEmailNotConfirmed(true);
+          }
         }
       } else {
         // Register
@@ -146,6 +161,24 @@ export default function AuthScreen() {
 
   const handleForgotPassword = () => {
     router.push('/auth/forgot-password');
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setGeneralError('Please enter your email address first.');
+      return;
+    }
+    setIsLoading(true);
+    setGeneralError('');
+    try {
+      const response = await authService.resendConfirmationEmail(email);
+      Alert.alert('Email Sent', response.message || 'A new confirmation email has been sent to your address.');
+    } catch (error: any) {
+      const errorMessage = typeof error === 'string' ? error : (error.message || 'An error occurred.');
+      setGeneralError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleAuthMode = () => {
@@ -309,6 +342,15 @@ export default function AuthScreen() {
                     onPress={handleForgotPassword}
                   >
                     <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
+                  </TouchableOpacity>
+                )}
+                {emailNotConfirmed && (
+                  <TouchableOpacity
+                    style={authStyles.forgotPassword}
+                    onPress={handleResendConfirmation}
+                    disabled={isLoading}
+                  >
+                    <Text style={authStyles.forgotPasswordText}>Resend confirmation email</Text>
                   </TouchableOpacity>
                 )}
               </View>
