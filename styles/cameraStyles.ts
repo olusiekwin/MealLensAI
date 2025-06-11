@@ -159,7 +159,11 @@ export const cameraStyles = StyleSheet.create({
     marginLeft: 8,
   },
   usePhotoButton: {
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
   },
   usePhotoText: {
     color: '#FFFFFF',

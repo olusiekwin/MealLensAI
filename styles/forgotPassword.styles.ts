@@ -30,6 +30,7 @@ export const forgotPasswordStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+<<<<<<< HEAD
   logo: {
     alignSelf: 'center',
     width: width * 0.2,
@@ -37,6 +38,8 @@ export const forgotPasswordStyles = StyleSheet.create({
     marginTop: Platform.OS === 'ios' ? 20 : 10,
     marginBottom: 10,
   },
+=======
+>>>>>>> the-moredern-features
   appTitle: {
     alignSelf: 'center',
     fontWeight: '600',
@@ -68,6 +71,20 @@ export const forgotPasswordStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
+<<<<<<< HEAD
+=======
+  errorContainer: {
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+>>>>>>> the-moredern-features
   inputContainer: {
     marginBottom: 20,
   },
@@ -98,7 +115,11 @@ export const forgotPasswordStyles = StyleSheet.create({
   },
   submitButton: {
     height: 60,
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
@@ -154,15 +175,28 @@ export const forgotPasswordStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 4,
   },
   backToLoginButtonText: {
     fontWeight: '600',
     fontSize: 18,
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
   },
 });

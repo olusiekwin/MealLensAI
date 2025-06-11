@@ -51,10 +51,19 @@ export const settingsStyles = StyleSheet.create({
     borderRadius: 15,
     padding: 16,
     marginBottom: 12,
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
@@ -74,6 +83,30 @@ export const settingsStyles = StyleSheet.create({
     fontWeight: '500',
     color: '#202026',
   },
+<<<<<<< HEAD
+=======
+  settingTextContainer: {
+    flex: 1,
+  },
+  subscriptionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
+  },
+  premiumBadge: {
+    backgroundColor: '#000000',
+  },
+  freeBadge: {
+    backgroundColor: '#B5B5B5',
+  },
+  subscriptionBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+>>>>>>> the-moredern-features
   valueContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 import { StyleSheet } from "react-native";
+=======
+import { StyleSheet, Dimensions, Platform } from "react-native";
+
+const { width } = Dimensions.get('window');
+>>>>>>> the-moredern-features
 
 export const recipesStyles = StyleSheet.create({
   container: {
@@ -35,6 +41,45 @@ export const recipesStyles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 15,
   },
+<<<<<<< HEAD
+=======
+  textInputContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#202026',
+    marginBottom: 8,
+  },
+  textInputWrapper: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  textInputField: {
+    fontSize: 16,
+    color: '#202026',
+    minHeight: 80,
+  },
+  detectButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  detectButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+>>>>>>> the-moredern-features
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -61,6 +106,18 @@ export const recipesStyles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F5F5F5',
     marginRight: 10,
+<<<<<<< HEAD
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+>>>>>>> the-moredern-features
   },
   activeCategoryButton: {
     backgroundColor: '#202026',
@@ -83,11 +140,17 @@ export const recipesStyles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 16,
     overflow: 'hidden',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      elevation: 2,
+    }),
+>>>>>>> the-moredern-features
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
   },
@@ -171,6 +234,7 @@ export const recipesStyles = StyleSheet.create({
     paddingBottom: 10,
   },
   favoriteCard: {
+<<<<<<< HEAD
     width: 120,
     height: 140,
     backgroundColor: '#FFFFFF',
@@ -184,6 +248,18 @@ export const recipesStyles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
+=======
+    width: '31%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    marginRight: '3.5%',
+    marginBottom: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      elevation: 2,
+    }),
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+>>>>>>> the-moredern-features
   },
   favoriteImage: {
     width: '100%',
@@ -205,6 +281,142 @@ export const recipesStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+<<<<<<< HEAD
+=======
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 10,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#6E6E6E',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  emptyStateButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  emptyStateButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emptyStateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  loginButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraButton: {
+    backgroundColor: '#FF5353',
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginHorizontal: 16,
+    marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  detectionsList: {
+    paddingHorizontal: 16,
+  },
+  detectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  detectionImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  detectionInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  detectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 4,
+  },
+  detectionItems: {
+    fontSize: 14,
+    color: '#6E6E6E',
+    marginBottom: 4,
+  },
+  detectionDate: {
+    fontSize: 12,
+    color: '#B5B5B5',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#202026',
+    marginLeft: 8,
+  },
+>>>>>>> the-moredern-features
   favoriteHeartButton: {
     position: 'absolute',
     top: 6,

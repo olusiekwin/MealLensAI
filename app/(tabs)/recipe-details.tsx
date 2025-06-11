@@ -33,7 +33,11 @@ export default function RecipeDetailsScreen() {
             style={recipeDetailsStyles.backButton}
             onPress={() => router.back()}
           >
+<<<<<<< HEAD
             <ArrowLeft color="#FF6A00" size={24} />
+=======
+            <ArrowLeft color="#000000" size={24} />
+>>>>>>> the-moredern-features
           </TouchableOpacity>
           
           <View style={recipeDetailsStyles.headerActions}>
@@ -41,16 +45,26 @@ export default function RecipeDetailsScreen() {
               style={recipeDetailsStyles.actionButton}
               onPress={handleShare}
             >
+<<<<<<< HEAD
               <Share2 color="#FF6A00" size={20} />
+=======
+              <Share2 color="#000000" size={20} />
+>>>>>>> the-moredern-features
             </TouchableOpacity>
             <TouchableOpacity 
               style={recipeDetailsStyles.actionButton}
               onPress={() => setIsFavorite(!isFavorite)}
             >
               <Heart 
+<<<<<<< HEAD
                 color="#FF6A00" 
                 size={20} 
                 fill={isFavorite ? "#FF6A00" : "transparent"} 
+=======
+                color="#000000" 
+                size={20} 
+                fill={isFavorite ? "#000000" : "transparent"} 
+>>>>>>> the-moredern-features
               />
             </TouchableOpacity>
           </View>

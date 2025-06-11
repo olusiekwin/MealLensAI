@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 import { StyleSheet } from "react-native";
+=======
+import { StyleSheet, Dimensions, Platform } from "react-native";
+
+const { width } = Dimensions.get('window');
+>>>>>>> the-moredern-features
 
 export const aiChatStyles = StyleSheet.create({
   container: {
@@ -58,16 +64,29 @@ export const aiChatStyles = StyleSheet.create({
     marginBottom: 15,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.2)',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
     marginBottom: 10,
   },
   ingredientsList: {
@@ -92,6 +111,18 @@ export const aiChatStyles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
+<<<<<<< HEAD
+=======
+  scrollContainer: {
+    flex: 1,
+  },
+  aiResponseTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 15,
+  },
+>>>>>>> the-moredern-features
   recipeCard: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -100,10 +131,19 @@ export const aiChatStyles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.15)',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     height: 121,
   },
@@ -175,10 +215,19 @@ export const aiChatStyles = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#ECECEC',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
   },
   youtubeIcon: {
@@ -232,4 +281,54 @@ export const aiChatStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+<<<<<<< HEAD
+=======
+  // Recipe instructions section
+  recipeInstructionsContainer: {
+    marginBottom: 20,
+  },
+  recipeInstructionsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 15,
+  },
+  recipeInstructionsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  recipeInstructionsStep: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#6A6A6A',
+    marginBottom: 10,
+  },
+  // Loading state
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  loadingContentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6A6A6A',
+    marginTop: 20,
+  },
+>>>>>>> the-moredern-features
 });

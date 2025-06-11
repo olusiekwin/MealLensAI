@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { StyleSheet } from "react-native";
+=======
+import { StyleSheet, Platform } from "react-native";
+>>>>>>> the-moredern-features
 
 export const challengeStyles = StyleSheet.create({
   container: {
@@ -30,10 +34,19 @@ export const challengeStyles = StyleSheet.create({
     height: 200,
     borderRadius: 15,
     overflow: "hidden",
+<<<<<<< HEAD
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 3,
   },
   activeChallengeImage: {
@@ -51,7 +64,11 @@ export const challengeStyles = StyleSheet.create({
   badgeContainer: {
     flexDirection: "row",
     alignItems: "center",
+<<<<<<< HEAD
     backgroundColor: "#FF6A00",
+=======
+    backgroundColor: "#000000",
+>>>>>>> the-moredern-features
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -81,7 +98,11 @@ export const challengeStyles = StyleSheet.create({
   },
   progressFill: {
     height: "100%",
+<<<<<<< HEAD
     backgroundColor: "#FF6A00",
+=======
+    backgroundColor: "#000000",
+>>>>>>> the-moredern-features
     borderRadius: 4,
   },
   progressText: {
@@ -109,12 +130,22 @@ export const challengeStyles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
     borderRadius: 15,
+<<<<<<< HEAD
     marginBottom: 16,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+=======
+    overflow: "hidden",
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     borderWidth: 1,
     borderColor: "rgba(124, 124, 124, 0.1)",
@@ -132,7 +163,11 @@ export const challengeStyles = StyleSheet.create({
   challengeBadge: {
     flexDirection: "row",
     alignItems: "center",
+<<<<<<< HEAD
     backgroundColor: "#FF6A00",
+=======
+    backgroundColor: "#000000",
+>>>>>>> the-moredern-features
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,

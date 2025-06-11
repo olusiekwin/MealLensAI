@@ -15,9 +15,45 @@ export const cameraStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'space-between',
     alignItems: 'center',
+<<<<<<< HEAD
     paddingTop: 100,
     paddingBottom: 50,
   },
+=======
+    paddingTop: 20,
+    paddingBottom: 50,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeIndicator: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modeText: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  modeDescription: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+>>>>>>> the-moredern-features
   cameraFrame: {
     width: 250,
     height: 250,
@@ -160,11 +196,31 @@ export const cameraStyles = StyleSheet.create({
     marginLeft: 8,
   },
   usePhotoButton: {
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
   },
   usePhotoText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
+<<<<<<< HEAD
+=======
+  // Analyzing state
+  analyzingContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  analyzingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 12,
+  },
+>>>>>>> the-moredern-features
 });

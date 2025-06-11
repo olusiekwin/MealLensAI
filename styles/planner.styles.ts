@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { StyleSheet, Dimensions } from "react-native";
+=======
+import { StyleSheet, Dimensions, Platform } from "react-native";
+>>>>>>> the-moredern-features
 
 const { width } = Dimensions.get('window');
 
@@ -6,7 +10,13 @@ export const plannerStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+<<<<<<< HEAD
     paddingBottom: 80, // Add padding to account for tab bar
+=======
+  },
+  scrollContent: {
+    paddingBottom: 100, // Add padding to account for tab bar
+>>>>>>> the-moredern-features
   },
   header: {
     flexDirection: 'row',
@@ -24,7 +34,11 @@ export const plannerStyles = StyleSheet.create({
   favoritesLink: {
     fontSize: 16,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
   },
   searchContainer: {
     paddingHorizontal: 17,
@@ -86,7 +100,11 @@ export const plannerStyles = StyleSheet.create({
     marginBottom: 5,
   },
   orangeCircle: {
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
   },
   preferenceText: {
     fontSize: 12,
@@ -96,6 +114,10 @@ export const plannerStyles = StyleSheet.create({
   },
   mealPlansSection: {
     paddingHorizontal: 16,
+<<<<<<< HEAD
+=======
+    paddingBottom: 30,
+>>>>>>> the-moredern-features
   },
   sectionTitle: {
     fontSize: 18,
@@ -146,10 +168,19 @@ export const plannerStyles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.15)',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
   },
   activeDayCard: {
@@ -163,7 +194,11 @@ export const plannerStyles = StyleSheet.create({
   dayNumber: {
     fontSize: 18,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
     marginTop: 2,
   },
   activeDayText: {
@@ -172,7 +207,11 @@ export const plannerStyles = StyleSheet.create({
   activeDayNumber: {
     fontSize: 18,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
     marginTop: 2,
   },
   mealTypeContainer: {
@@ -205,8 +244,12 @@ export const plannerStyles = StyleSheet.create({
     color: '#B3B3B3',
   },
   mealCard: {
+<<<<<<< HEAD
     width: 342,
     height: 241,
+=======
+    width: '100%',
+>>>>>>> the-moredern-features
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
@@ -218,7 +261,10 @@ export const plannerStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
     marginBottom: 20,
+<<<<<<< HEAD
     alignSelf: 'center',
+=======
+>>>>>>> the-moredern-features
   },
   mealImage: {
     width: '100%',
@@ -231,11 +277,16 @@ export const plannerStyles = StyleSheet.create({
     fontWeight: '500',
     color: '#202026',
     padding: 15,
+<<<<<<< HEAD
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
     borderLeftWidth: 0,
     borderRightWidth: 0,
     borderTopWidth: 0,
+=======
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(124, 124, 124, 0.1)',
+>>>>>>> the-moredern-features
   },
   nutritionContainer: {
     flexDirection: 'row',

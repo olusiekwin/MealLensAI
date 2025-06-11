@@ -73,12 +73,23 @@ export const onboardingStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     width: '100%',
+<<<<<<< HEAD
     height: height * 0.55,
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 30,
     paddingTop: 40,
+=======
+    minHeight: height * 0.55,
+    maxHeight: height * 0.7,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+>>>>>>> the-moredern-features
     alignItems: 'center',
   },
   headingText: {
@@ -114,6 +125,7 @@ export const onboardingStyles = StyleSheet.create({
     backgroundColor: '#202026',
   },
   nextButton: {
+<<<<<<< HEAD
     position: 'absolute',
     bottom: 40,
     width: 320,
@@ -122,6 +134,21 @@ export const onboardingStyles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+=======
+    width: '100%',
+    height: 56,
+    backgroundColor: '#202026',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 'auto',
+    marginBottom: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+>>>>>>> the-moredern-features
   },
   nextButtonText: {
     fontWeight: '600',

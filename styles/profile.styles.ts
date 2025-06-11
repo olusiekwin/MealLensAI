@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { StyleSheet } from "react-native";
+=======
+import { StyleSheet, Platform } from "react-native";
+>>>>>>> the-moredern-features
 
 export const profileStyles = StyleSheet.create({
   container: {
@@ -97,7 +101,11 @@ export const profileStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -136,7 +144,11 @@ export const profileStyles = StyleSheet.create({
     marginRight: 8,
   },
   saveButton: {
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
   },
   editButtonText: {
     fontSize: 14,
@@ -165,10 +177,19 @@ export const profileStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 15,
     backgroundColor: '#FFFFFF',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
   },
   input: {
@@ -193,10 +214,19 @@ export const profileStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     backgroundColor: '#FFFFFF',
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
   },
   radioSelected: {

@@ -1,10 +1,17 @@
+<<<<<<< HEAD
 import { StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get('window');
+=======
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+>>>>>>> the-moredern-features
 
 export const homeStyles = StyleSheet.create({
   container: {
     flex: 1,
+<<<<<<< HEAD
     backgroundColor: "#FFFFFF",
     paddingBottom: 80, // Add padding to account for tab bar
   },
@@ -341,5 +348,321 @@ export const homeStyles = StyleSheet.create({
   },
   activeDot: {
     backgroundColor: "rgba(32, 32, 38, 0.4)",
+=======
+    backgroundColor: '#F8F8F8',
+  },
+  scrollContent: {
+    paddingBottom: 80,
+  },
+  headerGradient: {
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  greeting: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  welcomeBack: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+  },
+  locationContainer: {
+    marginTop: 10,
+  },
+  locationLabel: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 4,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    marginRight: 4,
+  },
+  finderCardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  finderCard: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 15,
+    alignItems: 'center',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+  },
+  finderIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF0E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  finderIcon: {
+    fontSize: 24,
+  },
+  finderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#202026',
+  },
+  featuredStreakContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  featuredDishCard: {
+    width: '48%',
+    height: 180,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    overflow: 'hidden',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    padding: 15,
+  },
+  featuredDishContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  featuredDishLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 8,
+  },
+  featuredDishName: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    lineHeight: 20,
+    marginBottom: 10,
+  },
+  cookNowButton: {
+    backgroundColor: '#202026',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  cookNowText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cookingStreakCard: {
+    width: '48%',
+    height: 180,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    overflow: 'hidden',
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    padding: 15,
+  },
+  cookingStreakContent: {
+    flex: 1,
+  },
+  cookingStreakTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 4,
+  },
+  cookingStreakSubtitle: {
+    fontSize: 12,
+    color: '#6A6A6A',
+    lineHeight: 16,
+    marginBottom: 15,
+  },
+  streakInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  streakProgressContainer: {
+    alignItems: 'center',
+  },
+  streakProgressCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakProgressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#202026',
+  },
+  suggestionsContainer: {
+    paddingHorizontal: 20,
+    marginTop: 30,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#202026',
+  },
+  viewAllButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  recipesContainer: {
+    paddingRight: 20,
+  },
+  recipeCard: {
+    width: 200,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    overflow: 'hidden',
+    marginRight: 15,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+  },
+  recipeImage: {
+    width: '100%',
+    height: 120,
+  },
+  recipeContent: {
+    padding: 12,
+  },
+  recipeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#202026',
+    marginBottom: 8,
+  },
+  recipeDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  recipeDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailText: {
+    fontSize: 12,
+    color: '#6A6A6A',
+    marginLeft: 4,
+  },
+  heartButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: '#000000',
+    width: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6A6A6A',
+>>>>>>> the-moredern-features
   },
 });

@@ -29,7 +29,11 @@ export const recipeOptionsStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
+<<<<<<< HEAD
     color: "#FF6A00",
+=======
+    color: "#000000",
+>>>>>>> the-moredern-features
     marginBottom: 16,
   },
   instructionsContainer: {

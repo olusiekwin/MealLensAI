@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 import { StyleSheet, Platform } from "react-native";
+=======
+import { StyleSheet, Platform, Dimensions } from "react-native";
+
+const { width } = Dimensions.get('window');
+>>>>>>> the-moredern-features
 
 export const paymentStyles = StyleSheet.create({
   container: {
@@ -30,9 +36,83 @@ export const paymentStyles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
+<<<<<<< HEAD
   scrollContainer: {
     flex: 1,
     paddingHorizontal: 16,
+=======
+  subscriptionStatusContainer: {
+    marginBottom: 24,
+  },
+  subscriptionStatusCard: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+  },
+  subscriptionStatusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subscriptionStatusTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#202026',
+  },
+  subscriptionStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  premiumBadge: {
+    backgroundColor: '#000000',
+  },
+  freeBadge: {
+    backgroundColor: '#B5B5B5',
+  },
+  subscriptionStatusBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  subscriptionDetail: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    marginBottom: 8,
+  },
+  subscriptionDetailLabel: {
+    fontWeight: '600',
+    color: '#202026',
+  },
+  historyToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    marginBottom: 16,
+  },
+  historyToggleText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#202026',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+>>>>>>> the-moredern-features
   },
   planSection: {
     marginBottom: 24,
@@ -46,6 +126,7 @@ export const paymentStyles = StyleSheet.create({
   planOptions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+<<<<<<< HEAD
   },
   planCard: {
     width: '48%',
@@ -56,13 +137,48 @@ export const paymentStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+=======
+    marginBottom: 16,
+  },
+  planCard: {
+    width: (width - 40) / 2.1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+    position: 'relative',
+  },
+  annualPlanCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
     position: 'relative',
   },
   selectedPlanCard: {
+<<<<<<< HEAD
     borderColor: '#FF6A00',
+=======
+    borderColor: '#000000',
+>>>>>>> the-moredern-features
     borderWidth: 2,
   },
   planHeader: {
@@ -71,6 +187,26 @@ export const paymentStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+<<<<<<< HEAD
+=======
+  annualPlanHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  annualPlanContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  annualPriceContainer: {
+    flex: 1,
+  },
+  annualFeaturesContainer: {
+    flex: 2,
+    paddingLeft: 16,
+  },
+>>>>>>> the-moredern-features
   planName: {
     fontSize: 16,
     fontWeight: '600',
@@ -98,7 +234,20 @@ export const paymentStyles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     right: -10,
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  bestValueBadge: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -113,11 +262,19 @@ export const paymentStyles = StyleSheet.create({
   },
   paymentOptions: {
     flexDirection: 'row',
+<<<<<<< HEAD
     justifyContent: 'space-between',
     marginBottom: 16,
   },
   paymentOptionButton: {
     width: '48%',
+=======
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  paymentOptionButton: {
+    width: '31%',
+>>>>>>> the-moredern-features
     height: 60,
     backgroundColor: '#F5F5F5',
     borderRadius: 15,
@@ -126,16 +283,52 @@ export const paymentStyles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
+<<<<<<< HEAD
+=======
+    marginBottom: 10,
+  },
+  selectedPaymentOption: {
+    borderColor: '#000000',
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 106, 0, 0.05)',
+>>>>>>> the-moredern-features
   },
   paymentOptionIcon: {
     width: 24,
     height: 24,
     marginRight: 8,
   },
+<<<<<<< HEAD
   paymentOptionText: {
     fontSize: 16,
     fontWeight: '500',
     color: '#202026',
+=======
+  mpesaIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  applePayIcon: {
+    width: 40,
+    height: 24,
+    marginRight: 4,
+  },
+  googlePayIcon: {
+    width: 40,
+    height: 24,
+    marginRight: 4,
+  },
+  paymentOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#202026',
+    marginLeft: 8,
+  },
+  selectedPaymentOptionText: {
+    color: '#000000',
+    fontWeight: '600',
+>>>>>>> the-moredern-features
   },
   cardSection: {
     marginBottom: 24,
@@ -144,10 +337,19 @@ export const paymentStyles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 16,
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
@@ -167,6 +369,102 @@ export const paymentStyles = StyleSheet.create({
     marginLeft: 8,
     resizeMode: 'contain',
   },
+<<<<<<< HEAD
+=======
+  // M-Pesa specific styles
+  mpesaSection: {
+    marginBottom: 24,
+  },
+  mpesaContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+  },
+  mpesaHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  mpesaLogo: {
+    width: 120,
+    height: 40,
+  },
+  mpesaInstructions: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    lineHeight: 20,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  // Apple Pay specific styles
+  applePaySection: {
+    marginBottom: 24,
+  },
+  applePayContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+    alignItems: 'center',
+  },
+  applePayLogo: {
+    width: 120,
+    height: 50,
+    marginBottom: 16,
+  },
+  applePayText: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  // Google Pay specific styles
+  googlePaySection: {
+    marginBottom: 24,
+  },
+  googlePayContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
+    alignItems: 'center',
+  },
+  googlePayLogo: {
+    width: 120,
+    height: 50,
+    marginBottom: 16,
+  },
+  googlePayText: {
+    fontSize: 14,
+    color: '#6A6A6A',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+>>>>>>> the-moredern-features
   inputContainer: {
     marginBottom: 16,
   },
@@ -204,10 +502,19 @@ export const paymentStyles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 16,
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+>>>>>>> the-moredern-features
     elevation: 2,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
@@ -240,19 +547,36 @@ export const paymentStyles = StyleSheet.create({
   totalValue: {
     fontSize: 18,
     fontWeight: '600',
+<<<<<<< HEAD
     color: '#FF6A00',
   },
   payButton: {
     height: 60,
     backgroundColor: '#FF6A00',
+=======
+    color: '#000000',
+  },
+  payButton: {
+    height: 60,
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+<<<<<<< HEAD
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
+=======
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+    }),
+>>>>>>> the-moredern-features
     elevation: 4,
   },
   payButtonDisabled: {

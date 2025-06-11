@@ -22,7 +22,11 @@ export const plannerStyles = StyleSheet.create({
   favoritesLink: {
     fontSize: 16,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
   },
   searchContainer: {
     paddingHorizontal: 17,
@@ -84,7 +88,11 @@ export const plannerStyles = StyleSheet.create({
     marginBottom: 5,
   },
   orangeCircle: {
+<<<<<<< HEAD
     backgroundColor: '#FF6A00',
+=======
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
   },
   preferenceText: {
     fontSize: 12,
@@ -161,7 +169,11 @@ export const plannerStyles = StyleSheet.create({
   dayNumber: {
     fontSize: 18,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
     marginTop: 2,
   },
   activeDayText: {
@@ -170,7 +182,11 @@ export const plannerStyles = StyleSheet.create({
   activeDayNumber: {
     fontSize: 18,
     fontWeight: '500',
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
     marginTop: 2,
   },
   mealTypeContainer: {

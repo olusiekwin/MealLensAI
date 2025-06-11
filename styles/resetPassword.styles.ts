@@ -30,6 +30,7 @@ export const resetPasswordStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+<<<<<<< HEAD
   logo: {
     alignSelf: 'center',
     width: width * 0.2,
@@ -37,6 +38,8 @@ export const resetPasswordStyles = StyleSheet.create({
     marginTop: Platform.OS === 'ios' ? 20 : 10,
     marginBottom: 10,
   },
+=======
+>>>>>>> the-moredern-features
   appTitle: {
     alignSelf: 'center',
     fontWeight: '600',
@@ -68,6 +71,20 @@ export const resetPasswordStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
+<<<<<<< HEAD
+=======
+  errorContainer: {
+    backgroundColor: 'rgba(255, 59, 48, 0.2)',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+>>>>>>> the-moredern-features
   inputContainer: {
     marginBottom: 20,
   },
@@ -99,6 +116,7 @@ export const resetPasswordStyles = StyleSheet.create({
   eyeIcon: {
     padding: 10,
   },
+<<<<<<< HEAD
   errorText: {
     color: '#FF3B30',
     fontSize: 14,
@@ -107,6 +125,11 @@ export const resetPasswordStyles = StyleSheet.create({
   submitButton: {
     height: 60,
     backgroundColor: '#FF6A00',
+=======
+  submitButton: {
+    height: 60,
+    backgroundColor: '#000000',
+>>>>>>> the-moredern-features
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
@@ -162,6 +185,10 @@ export const resetPasswordStyles = StyleSheet.create({
   backToLoginButtonText: {
     fontWeight: '600',
     fontSize: 18,
+<<<<<<< HEAD
     color: '#FF6A00',
+=======
+    color: '#000000',
+>>>>>>> the-moredern-features
   },
 });
