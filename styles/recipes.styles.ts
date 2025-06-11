@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions, Platform } from "react-native";
 
 const { width } = Dimensions.get('window');
 
@@ -99,6 +99,15 @@ export const recipesStyles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F5F5F5',
     marginRight: 10,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    }),
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
   },
   activeCategoryButton: {
     backgroundColor: '#202026',
@@ -121,11 +130,9 @@ export const recipesStyles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' } : {
+      elevation: 2,
+    }),
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.1)',
   },
@@ -209,19 +216,16 @@ export const recipesStyles = StyleSheet.create({
     paddingBottom: 10,
   },
   favoriteCard: {
-    width: 120,
-    height: 140,
+    width: '31%',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    marginRight: 15,
-    overflow: 'hidden',
+    marginRight: '3.5%',
+    marginBottom: 16,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      elevation: 2,
+    }),
     borderWidth: 1,
-    borderColor: 'rgba(124, 124, 124, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    borderColor: 'rgba(124, 124, 124, 0.1)',
   },
   favoriteImage: {
     width: '100%',

@@ -270,16 +270,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   header: {
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#202026',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
+    lineHeight: 22,
   },
   form: {
     marginBottom: 24,

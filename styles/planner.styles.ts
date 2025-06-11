@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions, Platform } from "react-native";
 
 const { width } = Dimensions.get('window');
 
@@ -149,10 +149,12 @@ export const plannerStyles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
     elevation: 2,
   },
   activeDayCard: {

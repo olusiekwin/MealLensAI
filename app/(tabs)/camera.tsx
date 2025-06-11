@@ -150,93 +150,34 @@ export default function CameraScreen() {
     setCapturedImage(null);
   };
 
-  const analyzeImage = async () => {
+  const handleUsePhoto = async () => {
     if (!capturedImage) return;
     
     setIsAnalyzing(true);
-    
     try {
-      // Encode image to base64
+      // Convert image to base64
       const base64 = await FileSystem.readAsStringAsync(capturedImage, {
         encoding: FileSystem.EncodingType.Base64,
       });
       
-      // First, check with backend if we should show an ad (premium status check)
-      // This leverages the backend to make the decision rather than frontend
-      const api = require('@/services/api').default;
+      // Call AI service to detect food
+      const result = await aiService.detectFood(base64);
       
-      // Request ad from backend if needed - backend will determine if user should see ads
-      if (shouldShowAds) {
-        try {
-          const adResponse = await api.get('/ads/should-display', {
-            params: { context: 'detection', mode }
-          });
-          
-          if (adResponse.data && adResponse.data.showAd) {
-            // Show ad from backend or placeholder
-            setShowAd(true);
-            // Wait for ad display duration
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            setShowAd(false);
-            
-            // Notify backend that ad was viewed
-            await api.post('/ads/viewed', { 
-              adId: adResponse.data.adId || 'placeholder',
-              context: 'detection'
-            }).catch(err => console.log('Ad view tracking error:', err));
-          }
-        } catch (error) {
-          console.log('Ad service error, continuing with analysis:', error);
-        }
-      }
-      
-      // Call backend API based on mode - letting backend handle the heavy processing
-      if (mode === 'food') {
-        // Send image to backend for processing
-        const result = await api.post('/analysis/food', { 
-          image: base64,
-          saveHistory: true
-        });
-        
-        if (result.data && result.data.success) {
+      if (result && result.success) {
+        // Navigate to results screen with detection ID
           router.push({
-            pathname: '/(tabs)/nutritional-breakdown',
-            params: { 
-              imageUri: capturedImage,
-              analysisId: result.data.id || result.data.analysisId
-            }
+          pathname: '/detection-details',
+          params: { detectionId: result.detection_id }
           });
         } else {
-          Alert.alert('Error', result.data?.error || 'Failed to analyze image');
-        }
-      } else if (mode === 'recipe') {
-        // Send image to backend for recipe processing
-        const result = await api.post('/analysis/recipe', { 
-          image: base64,
-          saveHistory: true
-        });
-        
-        if (result.data && result.data.success) {
-          router.push({
-            pathname: '/(tabs)/recipes',
-            params: { 
-              imageUri: capturedImage,
-              analysisId: result.data.id || result.data.analysisId
-            }
-          });
-        } else {
-          Alert.alert('Error', result.data?.error || 'Failed to analyze recipe image');
-        }
+        Alert.alert('Error', 'Failed to analyze image. Please try again.');
       }
-      
     } catch (error) {
       console.error('Error analyzing image:', error);
-      Alert.alert(
-        'Analysis Failed',
-        error.message || 'Failed to analyze image. Please try again.'
-      );
+      Alert.alert('Error', 'Failed to analyze image. Please try again.');
     } finally {
       setIsAnalyzing(false);
+      setCapturedImage(null);
     }
   };
 
@@ -244,82 +185,68 @@ export default function CameraScreen() {
     router.back();
   };
 
+  if (isAnalyzing) {
+    return <AnalysisLoadingScreen />;
+  }
+
+  if (showAd) {
+    return <AdPlaceholder />;
+  }
+
+  if (capturedImage) {
   return (
-    <View style={cameraStyles.container}>
-      {/* Analysis Loading Overlay */}
-      {isAnalyzing && !showAd && <AnalysisLoadingScreen message="Analyzing your image..." />}
-      
-      {/* Ad Placeholder */}
-      {showAd && <AdPlaceholder onClose={() => setShowAd(false)} />}
-      {capturedImage ? (
         <View style={cameraStyles.previewContainer}>
-          <Image 
-            source={{ uri: capturedImage }} 
-            style={cameraStyles.previewImage} 
-          />
-          
+        <Image source={{ uri: capturedImage }} style={cameraStyles.previewImage} />
           <View style={cameraStyles.previewOverlay}>
+          <TouchableOpacity style={cameraStyles.closeButton} onPress={handleRetake}>
+            <X color="#FFFFFF" size={24} />
+          </TouchableOpacity>
+          <View style={cameraStyles.previewActions}>
             <TouchableOpacity 
-              style={cameraStyles.closeButton}
+              style={[cameraStyles.previewActionButton]} 
               onPress={handleRetake}
             >
-              <X size={24} color="#FFFFFF" />
+              <RefreshCw color="#FFFFFF" size={20} />
+              <Text style={cameraStyles.previewActionText}>Retake</Text>
             </TouchableOpacity>
-            
-            <View style={cameraStyles.previewActions}>
-              {isAnalyzing ? (
-                <View style={cameraStyles.analyzingContainer}>
-                  <ActivityIndicator size="large" color="#FFFFFF" />
-                  <Text style={cameraStyles.analyzingText}>Analyzing image...</Text>
-                </View>
-              ) : (
-                <>
-                  <TouchableOpacity 
-                    style={cameraStyles.previewActionButton}
-                    onPress={handleRetake}
-                  >
-                    <RefreshCw size={20} color="#FFFFFF" />
-                    <Text style={cameraStyles.previewActionText}>Retake</Text>
-                  </TouchableOpacity>
-                  
                   <TouchableOpacity 
                     style={[cameraStyles.previewActionButton, cameraStyles.usePhotoButton]}
                     onPress={handleUsePhoto}
                   >
-                    <Text style={cameraStyles.usePhotoText}>Use Photo</Text>
+              <Camera color="#FFFFFF" size={20} />
+              <Text style={[cameraStyles.previewActionText, cameraStyles.usePhotoText]}>
+                Use Photo
+              </Text>
                   </TouchableOpacity>
-                </>
-              )}
-            </View>
           </View>
         </View>
-      ) : (
+      </View>
+    );
+  }
+
+  return (
+    <View style={cameraStyles.container}>
         <CameraView 
+        ref={cameraRef}
           style={cameraStyles.camera} 
-          facing={facing}
-          ref={cameraRef}
+        type={facing}
         >
           <View style={cameraStyles.overlay}>
             <View style={cameraStyles.headerContainer}>
-              <TouchableOpacity 
-                style={cameraStyles.backButton}
-                onPress={handleBack}
-              >
-                <ArrowLeft size={24} color="#FFFFFF" />
+            <TouchableOpacity style={cameraStyles.backButton} onPress={handleBack}>
+              <ArrowLeft color="#FFFFFF" size={24} />
               </TouchableOpacity>
+          </View>
               
               <View style={cameraStyles.modeIndicator}>
                 <Text style={cameraStyles.modeText}>
-                  {mode === 'food' ? 'Food Finder' : 'Recipe Finder'}
+              {mode === 'food' ? 'Food Detection' : 'Recipe Detection'}
                 </Text>
                 <Text style={cameraStyles.modeDescription}>
                   {mode === 'food' 
-                    ? 'Snap ingredients to get recipe ideas' 
-                    : 'Snap a meal to get the recipe'}
+                ? 'Point camera at food to identify ingredients' 
+                : 'Point camera at recipe to capture instructions'}
                 </Text>
-              </View>
-              
-              <View style={{ width: 40 }} />
             </View>
             
             <View style={cameraStyles.cameraFrame}>
@@ -343,16 +270,13 @@ export default function CameraScreen() {
             
             <Text style={cameraStyles.instructionText}>
               {mode === 'food' 
-                ? 'Position your ingredients in the frame' 
-                : 'Position your meal in the frame'}
+              ? 'Center the food in the frame for best results' 
+              : 'Center the recipe text in the frame'}
             </Text>
             
             <View style={cameraStyles.buttonContainer}>
-              <TouchableOpacity 
-                style={cameraStyles.flipButton} 
-                onPress={toggleCameraFacing}
-              >
-                <Text style={cameraStyles.flipButtonText}>Flip</Text>
+            <TouchableOpacity style={cameraStyles.flipButton} onPress={toggleCameraFacing}>
+              <RefreshCw color="#FFFFFF" size={24} />
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -360,23 +284,15 @@ export default function CameraScreen() {
                 onPress={handleCapture}
                 disabled={isCapturing}
               >
-                {isCapturing ? (
-                  <ActivityIndicator size="large" color="#FFFFFF" />
-                ) : (
                   <View style={cameraStyles.captureButtonInner} />
-                )}
               </TouchableOpacity>
               
-              <TouchableOpacity 
-                style={cameraStyles.galleryButton}
-                onPress={handlePickImage}
-              >
-                <ImageIcon size={24} color="#FFFFFF" />
+            <TouchableOpacity style={cameraStyles.galleryButton} onPress={handlePickImage}>
+              <ImageIcon color="#FFFFFF" size={24} />
               </TouchableOpacity>
             </View>
           </View>
         </CameraView>
-      )}
     </View>
   );
 }

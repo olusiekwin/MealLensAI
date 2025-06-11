@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -69,10 +69,12 @@ export const layoutStyles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 10px 20px rgba(0, 0, 0, 0.3)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+    }),
     elevation: 10,
   },
   popupContainer: {
@@ -81,11 +83,9 @@ export const layoutStyles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 10px 20px rgba(0, 0, 0, 0.3)' } : {
+      elevation: 10,
+    }),
   },
   popupHeader: {
     padding: 20,

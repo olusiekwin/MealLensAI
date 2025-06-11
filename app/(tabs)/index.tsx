@@ -1,348 +1,244 @@
-import { Text, View, ScrollView, Image, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from "react-native";
-import { Search, Bell, ChevronDown, Star, Heart } from "lucide-react-native";
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import { homeStyles } from "@/styles/home.styles";
-import { useState, useEffect } from "react";
-import { useUserStore } from '@/context/userStore';
-import { useAdStore } from '@/context/adStore';
-import SubscriptionPrompt from '@/components/SubscriptionPrompt';
-import UsageLimitBanner from '@/components/UsageLimitBanner';
-import AdBanner from '@/components/AdBanner';
-
-const { width } = Dimensions.get('window');
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Colors from "@/constants/colors";
+import { useUserStore } from "@/context/userStore";
+import api from "@/services/api";
 
 export default function HomeScreen() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feed, setFeed] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const { isAuthenticated, profile } = useUserStore();
   const router = useRouter();
-  const [hasNotifications, setHasNotifications] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [recentDetections, setRecentDetections] = useState<any[]>([]);
-  const [showSubscriptionPrompt, setShowSubscriptionPrompt] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  const { 
-    profile, 
-    usage, 
-    subscription, 
-    trackUsage, 
-    isLoading: isUserLoading,
-    fetchProfile
-  } = useUserStore();
-  
-  const { fetchAds, shouldShowAds } = useAdStore();
+  const fetchFeed = async () => {
+    try {
+      setError(null);
+      // Temporarily disabled feed fetching until backend is ready
+      // const response = await api.get('/feed');
+      // setFeed(response.data.data || []);
+      setFeed([]); // Empty feed for now
+    } catch (err: any) {
+      console.error('Feed error:', err);
+      // Don't show error to user, just set empty feed
+      setFeed([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const initialize = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch user profile if authenticated
-        await fetchProfile();
-        
-        // Fetch ads if user is not premium
-        if (subscription.status !== 'premium') {
-          await fetchAds();
-          
-          // Randomly decide to show subscription prompt (20% chance)
-          // This creates a non-intrusive experience while still promoting premium
-          if (Math.random() < 0.2) {
-            setShowSubscriptionPrompt(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing home screen:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    const checkAuth = async () => {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsCheckingAuth(false);
     };
-    
-    initialize();
+    checkAuth();
   }, []);
 
-  const handleFoodFinderPress = async () => {
-    try {
-      // Track usage before navigating
-      await trackUsage();
-      
-      // Check if daily limit is reached
-      if (usage.reachedDailyLimit && subscription.status === 'free') {
-        // Let the UsageLimitBanner handle this
-        return;
-      }
-      
-      // Prompt user to choose detection method
-      Alert.alert(
-        "Food Finder",
-        "Would you like to detect ingredients using text or image? Results will be saved to your Detection History.",
-        [
-          {
-            text: "Text",
-            onPress: () => router.push('/text-detection?mode=food')
-          },
-          {
-            text: "Image",
-            onPress: () => router.push('/camera?mode=food' as any)
-          }
-        ],
-        { cancelable: true }
-      );
-    } catch (error) {
-      console.error('Error tracking usage:', error);
-      // Default to camera if there's an error
-      router.push('/camera?mode=food' as any);
+  useEffect(() => {
+    if (!isCheckingAuth) {
+      fetchFeed();
     }
+  }, [isCheckingAuth]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchFeed();
   };
 
-  const handleRecipeFinderPress = async () => {
-    try {
-      // Track usage before navigating
-      await trackUsage();
-      
-      // Check if daily limit is reached
-      if (usage.reachedDailyLimit && subscription.status === 'free') {
-        // Let the UsageLimitBanner handle this
-        return;
-      }
-      
-      // Prompt user to choose detection method
-      Alert.alert(
-        "Recipe Finder",
-        "Would you like to detect recipes using text or image? Results will be saved to your Detection History.",
-        [
-          {
-            text: "Text",
-            onPress: () => router.push('/text-detection?mode=recipe')
-          },
-          {
-            text: "Image",
-            onPress: () => router.push('/camera?mode=recipe' as any)
-          }
-        ],
-        { cancelable: true }
-      );
-    } catch (error) {
-      console.error('Error tracking usage:', error);
-      // Default to camera if there's an error
-      router.push('/camera?mode=recipe' as any);
-    }
-  };
-  
-  const handleWatchAd = () => {
-    // In a real app, this would show an ad
-    Alert.alert(
-      'Ad Simulation',
-      'This is where an ad would play. After watching, you would get an additional scan.',
-      [
-        { 
-          text: 'Complete Ad', 
-          onPress: () => {
-            Alert.alert('Thank you!', 'You have earned an additional scan.');
-            router.push('/camera');
-          } 
-        }
-      ]
-    );
-  };
-  
-  const handleNotificationPress = () => {
-    Alert.alert(
-      "Notifications",
-      "You have 3 new recipe recommendations based on your preferences!",
-      [{ text: "OK", onPress: () => setHasNotifications(false) }]
-    );
-  };
-
-  if (isLoading || isUserLoading) {
+  if (isCheckingAuth) {
     return (
-      <View style={homeStyles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000000" />
-        <Text style={homeStyles.loadingText}>Loading...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.messageText}>Loading your profile...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.messageText}>Please log in to continue</Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/auth')}
+          >
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={homeStyles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={homeStyles.scrollContent}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {/* Header Section */}
-        <LinearGradient
-          colors={['#000000', '#FF8F47']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={homeStyles.headerGradient}
-        >
-          <View style={homeStyles.headerContent}>
-            <View>
-              <Text style={homeStyles.greeting}>Hi, {profile?.name?.split(' ')[0] || 'there'}</Text>
-              <Text style={homeStyles.welcomeBack}>Welcome back!</Text>
-            </View>
-            <View style={homeStyles.headerIcons}>
-              <TouchableOpacity style={homeStyles.iconButton}>
-                <Search color="#FFFFFF" size={20} />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={homeStyles.iconButton}
-                onPress={handleNotificationPress}
-              >
-                <Bell color="#FFFFFF" size={20} />
-                {hasNotifications && <View style={homeStyles.notificationDot} />}
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <View style={homeStyles.locationContainer}>
-            <Text style={homeStyles.locationLabel}>Your Location</Text>
-            <View style={homeStyles.locationRow}>
-              <Text style={homeStyles.locationText}>Kigali, Rwanda</Text>
-              <ChevronDown color="#FFFFFF" size={16} />
-            </View>
-          </View>
-        </LinearGradient>
-        
-        {/* Finder Cards */}
-        <View style={homeStyles.finderCardsContainer}>
-          <TouchableOpacity 
-            style={homeStyles.finderCard} 
-            onPress={handleRecipeFinderPress}
-          >
-            <View style={homeStyles.finderIconContainer}>
-              <Text style={homeStyles.finderIcon}>📝</Text>
-            </View>
-            <Text style={homeStyles.finderText}>Recipe Finder</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={homeStyles.finderCard} 
-            onPress={handleFoodFinderPress}
-          >
-            <View style={homeStyles.finderIconContainer}>
-              <Text style={homeStyles.finderIcon}>🥕</Text>
-            </View>
-            <Text style={homeStyles.finderText}>Food Finder</Text>
-          </TouchableOpacity>
+        <View style={styles.header}>
+          <Text style={styles.welcomeText}>Welcome back, {profile?.username || profile?.name || 'Friend'}!</Text>
+          <Text style={styles.subText}>What would you like to do today?</Text>
         </View>
         
-        {/* Contextual Subscription Prompt (shows occasionally) */}
-        {showSubscriptionPrompt && (
-          <SubscriptionPrompt 
-            contextType="general" 
-            onDismiss={() => setShowSubscriptionPrompt(false)} 
-          />
-        )}
-        
-        {/* Usage Limit Banner if limit reached */}
-        <UsageLimitBanner />
-        
-        {/* Ad Banner for free users */}
-        {shouldShowAds && <AdBanner position="banner" />}
-        
-        {/* Featured Dish and Cooking Streak Cards */}
-        <View style={homeStyles.featuredStreakContainer}>
-          {/* Featured Dish Card */}
-          <View style={homeStyles.featuredDishCard}>
-            <View style={homeStyles.featuredDishContent}>
-              <Text style={homeStyles.featuredDishLabel}>Featured Dish of the Day!</Text>
-              <Text style={homeStyles.featuredDishName}>Honey sweet Korea Fried Chicken</Text>
-              <TouchableOpacity 
-                style={homeStyles.cookNowButton}
-                onPress={() => router.push('/recipe-details')}
-              >
-                <Text style={homeStyles.cookNowText}>Cook Now</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.actionContainer}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push('/(tabs)/detection')}
+          >
+            <Text style={styles.actionButtonText}>Detect Food</Text>
+            <Text style={styles.actionButtonSubText}>Take a photo or enter ingredients</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push('/(tabs)/favorites')}
+          >
+            <Text style={styles.actionButtonText}>View Favorites</Text>
+            <Text style={styles.actionButtonSubText}>See your saved items</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <Text style={styles.actionButtonText}>Update Profile</Text>
+            <Text style={styles.actionButtonSubText}>Manage your preferences</Text>
+          </TouchableOpacity>
           </View>
-          
-          {/* Cooking Streak Card */}
-          <View style={homeStyles.cookingStreakCard}>
-            <View style={homeStyles.cookingStreakContent}>
-              <Text style={homeStyles.cookingStreakTitle}>Cooking Streak</Text>
-              <Text style={homeStyles.cookingStreakSubtitle}>Keep your streak alive by cooking today!</Text>
-              
-              <View style={homeStyles.streakInfoContainer}>
-                <Image 
-                  source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80' }}
-                  style={homeStyles.avatarImage}
-                />
-                <View style={homeStyles.streakProgressContainer}>
-                  <View style={homeStyles.streakProgressCircle}>
-                    <Text style={homeStyles.streakProgressText}>5/7</Text>
-                  </View>
-                </View>
+
+        {feed.length > 0 && (
+          <View style={styles.feedContainer}>
+            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            {feed.map((item, index) => (
+              <View key={item.id || index} style={styles.feedItem}>
+                <Text style={styles.itemTitle}>{item.title}</Text>
+                <Text style={styles.itemDescription}>{item.description}</Text>
               </View>
-            </View>
-          </View>
-        </View>
-        
-        {/* Recipe Suggestions */}
-        <View style={homeStyles.suggestionsContainer}>
-          <View style={homeStyles.sectionHeader}>
-            <Text style={homeStyles.sectionTitle}>Recipe Suggestions</Text>
-            <TouchableOpacity style={homeStyles.viewAllButton}>
-              <Text style={homeStyles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={homeStyles.recipesContainer}
-          >
-            {recipes.map((recipe, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={homeStyles.recipeCard}
-                onPress={() => router.push('/nutritional-breakdown')}
-              >
-                <Image source={{ uri: recipe.image }} style={homeStyles.recipeImage} />
-                <View style={homeStyles.recipeContent}>
-                  <Text style={homeStyles.recipeTitle}>{recipe.title}</Text>
-                  <View style={homeStyles.recipeDetails}>
-                    <View style={homeStyles.recipeDetail}>
-                      <Text style={homeStyles.detailText}>{recipe.time}</Text>
-                    </View>
-                    <View style={homeStyles.recipeDetail}>
-                      <Star size={12} color="#000000" fill="#000000" />
-                      <Text style={homeStyles.detailText}>{recipe.rating}</Text>
-                    </View>
-                  </View>
-                </View>
-                <TouchableOpacity style={homeStyles.heartButton}>
-                  <Heart size={14} color="#FF5353" fill="#FF5353" />
-                </TouchableOpacity>
-              </TouchableOpacity>
             ))}
-          </ScrollView>
-          
-          <View style={homeStyles.pagination}>
-            <View style={[homeStyles.paginationDot, homeStyles.activeDot]} />
-            <View style={homeStyles.paginationDot} />
-            <View style={homeStyles.paginationDot} />
-            <View style={homeStyles.paginationDot} />
           </View>
-        </View>
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
-const recipes = [
-  {
-    title: "Egg & Avocado Sandwich",
-    time: "15 min",
-    rating: "4.2",
-    image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  {
-    title: "Vegetable Stir Fry",
-    time: "20 min",
-    rating: "4.5",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  scrollView: {
+    flex: 1,
   },
-  {
-    title: "Berry Smoothie Bowl",
-    time: "10 min",
-    rating: "4.8",
-    image: "https://images.unsplash.com/photo-1546039907-7fa05f864c02?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
-];
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  subText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  messageText: {
+    fontSize: 18,
+    color: Colors.text,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  loginButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  actionContainer: {
+    padding: 16,
+  },
+  actionButton: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  actionButtonText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  actionButtonSubText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  feedContainer: {
+    paddingTop: 24,
+  },
+  feedItem: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  itemTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  itemDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+});

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../config/constants';
+import api from './api';
 
 export interface OnboardingStatus {
   hasCompletedOnboarding: boolean;
@@ -8,15 +9,56 @@ export interface OnboardingStatus {
 
 class SessionService {
   /**
-   * Check if user is logged in
+   * Check if user is logged in and token is valid
    */
   async isLoggedIn(): Promise<boolean> {
     try {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      return !!token;
+      if (!token) return false;
+
+      // Validate token with backend
+      try {
+        const response = await api.get('/api/v1/auth/validate-token');
+        return response.data.valid === true;
+      } catch (e) {
+        console.warn('Token validation failed:', e);
+        return false;
+      }
     } catch (error) {
       console.error('Error checking login status:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get token expiration time in seconds
+   */
+  async getTokenExpiration(): Promise<number | null> {
+    try {
+      const response = await api.get('/api/v1/auth/token-info');
+      return response.data.expiration || null;
+    } catch (error) {
+      console.error('Error getting token expiration:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if token needs refresh (expires in less than 5 minutes)
+   */
+  async needsTokenRefresh(): Promise<boolean> {
+    try {
+      const expiration = await this.getTokenExpiration();
+      if (!expiration) return true;
+
+      const currentTime = Date.now() / 1000;
+      const timeUntilExpiration = expiration - currentTime;
+      
+      // Return true if token expires in less than 5 minutes
+      return timeUntilExpiration < 300;
+    } catch (error) {
+      console.error('Error checking token refresh:', error);
+      return true;
     }
   }
 

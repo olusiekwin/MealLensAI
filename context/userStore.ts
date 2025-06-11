@@ -207,27 +207,8 @@ export const useUserStore = create<UserState>((set, get) => ({
   
   logout: async () => {
     try {
-      // Call the logout endpoint if authenticated
-      if (get().isAuthenticated) {
-        try {
-          await api.post('/auth/logout');
-        } catch (error) {
-          console.error('Logout API error:', error);
-          // Continue with local logout even if API call fails
-        }
-      }
-      
-      // Clear auth-related items from storage
-      const keysToRemove = [
-        STORAGE_KEYS.AUTH_TOKEN,
-        STORAGE_KEYS.REFRESH_TOKEN,
-        STORAGE_KEYS.USER_ID,
-        STORAGE_KEYS.USER_EMAIL
-      ];
-      
-      await AsyncStorage.multiRemove(keysToRemove);
-      
-      // Reset state
+      await api.post('/api/v1/auth/logout');
+      await AsyncStorage.removeItem('auth_token');
       set({
         isAuthenticated: false,
         profile: null,
@@ -237,8 +218,10 @@ export const useUserStore = create<UserState>((set, get) => ({
         },
         paymentHistory: []
       });
+      return true;
     } catch (error) {
       console.error('Logout error:', error);
+      return false;
     }
   },
   

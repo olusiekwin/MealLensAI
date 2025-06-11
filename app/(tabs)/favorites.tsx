@@ -1,268 +1,195 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from "react-native";
-import { useRouter } from "expo-router";
-import { favoritesStyles } from "@/styles/favorites.styles";
-import api from "@/services/api";
-import aiService from "@/services/aiService";
-import { useUserStore } from "@/context/userStore";
-import { Heart, Clock, ChevronRight } from "lucide-react-native";
+import { useState, useEffect } from 'react';
+import { Text, View, ScrollView, Image, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { Search, Filter, Clock, Star, Heart } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { favoritesStyles } from '../../styles/favorites.styles';
+import aiService from '@/services/aiService';
 
-interface Detection {
-  id: string;
-  title: string;
-  imageUrl?: string;
-  items: string[];
-  nutritionalInfo?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-  };
-  source: string;
-  createdAt: string;
-  isFavorite: boolean;
-}
+const categories = ["All", "Recipe", "Foods"];
+
+const favorites = [
+  {
+    title: "Egg & Avocado Sandwich",
+    description: "Simple and nutritious breakfast with creamy avocado",
+    time: "15 min",
+    rating: "4.2",
+    image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  },
+  {
+    title: "Vegetable Stir Fry",
+    description: "Healthy and colorful vegetable stir fry with crispy tofu",
+    time: "20 min",
+    rating: "4.5",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  },
+  {
+    title: "Honey Sweet Korean Fried Chicken",
+    description: "Crispy fried chicken glazed with sweet and spicy sauce",
+    time: "45 min",
+    rating: "4.8",
+    image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  },
+  {
+    title: "Berry Smoothie Bowl",
+    description: "Refreshing smoothie bowl topped with fresh fruits and granola",
+    time: "10 min",
+    rating: "4.7",
+    image: "https://images.unsplash.com/photo-1546039907-7fa05f864c02?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  },
+];
 
 export default function FavoritesScreen() {
-  const [favorites, setFavorites] = useState<Detection[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
-  const [removing, setRemoving] = useState("");
   const router = useRouter();
-  const { isAuthenticated } = useUserStore();
-
-  const fetchFavorites = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      
-      // Get user's detection history from AI service
-      const history = await aiService.getUserHistory();
-      
-      // Filter to only show favorites
-      const favoriteDetections = history.filter(item => item.isFavorite);
-      
-      // Map to our Detection interface format
-      const formattedFavorites = favoriteDetections.map(item => ({
-        id: item.id,
-        title: item.title || (item.items && item.items.length > 0 ? item.items[0] : 'Unknown Food'),
-        imageUrl: item.imageUrl,
-        items: item.items || [],
-        nutritionalInfo: item.nutritionalInfo,
-        source: item.source || 'image',
-        createdAt: item.createdAt || new Date().toISOString(),
-        isFavorite: true
-      }));
-      
-      setFavorites(formattedFavorites);
-    } catch (err: any) {
-      console.error("Error fetching favorites:", err);
-      setError(err.message || "An error occurred while fetching favorites");
-      setFavorites([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchFavorites().catch(err => {
-      console.error('Error during refresh:', err);
-      setRefreshing(false);
-    });
-  };
-
-  const handleRetry = () => {
-    fetchFavorites().catch(err => {
-      console.error('Error during retry:', err);
-    });
-  };
-
-  const handleRetryPress = () => {
-    handleRetry();
-  };
-
-  const viewDetectionDetails = (detectionId: string) => {
-    if (!detectionId) return;
-    router.push({
-      pathname: '/detection-details',
-      params: { detectionId }
-    });
-  };
-
-  const removeFromFavorites = async (detectionId: string) => {
-    try {
-      setRemoving(detectionId);
-      
-      // Toggle favorite status through AI service
-      await aiService.toggleFavorite(detectionId, false);
-      
-      // Remove the detection from the favorites list
-      setFavorites(prev => prev.filter(detection => detection.id !== detectionId));
-      Alert.alert("Success", "Item removed from favorites");
-    } catch (err: any) {
-      console.error("Error removing favorite:", err);
-      Alert.alert("Error", err.message || "An error occurred while removing favorite");
-    } finally {
-      setRemoving("");
-    }
-  };
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [favoriteItems, setFavoriteItems] = useState(favorites);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchFavorites().catch(err => {
-        console.error('Error fetching favorites on mount:', err);
-      });
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const history = await aiService.getUserHistory();
+      const favorites = history.filter(item => item.isFavorite);
+      setFavoriteItems(favorites);
+    } catch (error) {
+      console.error('Error loading favorites:', error);
     }
-  }, [isAuthenticated]);
+  };
 
-  if (!isAuthenticated) {
-    return (
-      <View style={favoritesStyles.pageContainer}>
-        <View style={favoritesStyles.header}>
-          <Text style={favoritesStyles.title}>Favorites</Text>
-        </View>
-        <View style={favoritesStyles.authContainer}>
-          <Text style={favoritesStyles.authTitle}>Please log in to view your favorites</Text>
-          <Text style={favoritesStyles.authSubtitle}>Create an account to save and access your favorite foods.</Text>
-          <TouchableOpacity 
-            style={favoritesStyles.authButton}
-            onPress={() => router.push('/auth')}
-          >
-            <Text style={favoritesStyles.authButtonText}>Sign In / Register</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
+  const handleFavoritePress = (item: any) => {
+    router.push({
+      pathname: '/detection-details',
+      params: { detectionId: item.id, from: 'favorites' },
+    });
+  };
 
-  if (loading && !refreshing) {
-    return (
-      <View style={favoritesStyles.pageContainer}>
-        <View style={favoritesStyles.header}>
-          <Text style={favoritesStyles.title}>Favorites</Text>
-        </View>
-        <View style={favoritesStyles.loadingContainer}>
-          <ActivityIndicator size="large" color="#000000" />
-          <Text style={favoritesStyles.loadingText}>Loading your favorites...</Text>
-        </View>
-      </View>
-    );
-  }
+  const toggleFavorite = (index: number) => {
+    const updatedFavorites = [...favoriteItems];
+    // Assuming we want to toggle a favorite status, though it's not in the data structure yet
+    // This is a placeholder for future implementation
+    setFavoriteItems(updatedFavorites);
+  };
 
-  if (error) {
-    return (
-      <View style={favoritesStyles.pageContainer}>
-        <View style={favoritesStyles.header}>
-          <Text style={favoritesStyles.title}>Favorites</Text>
-        </View>
-        <View style={favoritesStyles.errorContainer}>
-          <Text style={favoritesStyles.errorTitle}>Oops!</Text>
-          <Text style={favoritesStyles.errorMessage}>{error}</Text>
-          <TouchableOpacity style={favoritesStyles.retryButton} onPress={handleRetryPress}>
-            <Text style={favoritesStyles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
+  const handleRecipePress = () => {
+    router.push('/recipe-details');
+  };
 
-  if (favorites.length === 0 && !loading) {
-    return (
-      <View style={favoritesStyles.pageContainer}>
-        <View style={favoritesStyles.header}>
-          <Text style={favoritesStyles.title}>Favorites</Text>
-        </View>
-        <View style={favoritesStyles.emptyContainer}>
-          <Heart size={50} color="#B5B5B5" />
-          <Text style={favoritesStyles.emptyTitle}>You have no favorites yet</Text>
-          <Text style={favoritesStyles.emptySubtitle}>
-            Save your favorite food detections to see them here!
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  const filteredFavorites = searchQuery.trim() 
+    ? favoriteItems.filter(favorite => 
+        favorite.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        favorite.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : favoriteItems;
 
   return (
-    <View style={favoritesStyles.pageContainer}>
+    <View style={favoritesStyles.container}>
       <View style={favoritesStyles.header}>
         <Text style={favoritesStyles.title}>Favorites</Text>
-        {loading && !refreshing && (
-          <ActivityIndicator size="small" color="#000000" style={favoritesStyles.loadingIndicator} />
-        )}
+        <View style={favoritesStyles.headerIcons}>
+          <TouchableOpacity style={favoritesStyles.iconButton}>
+            <Search size={20} color="#202026" />
+          </TouchableOpacity>
+          <TouchableOpacity style={favoritesStyles.iconButton}>
+            <Filter size={20} color="#202026" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={favoritesStyles.searchContainer}>
+        <View style={favoritesStyles.searchBar}>
+          <Search size={20} color="#B5B5B5" style={favoritesStyles.searchIcon} />
+          <TextInput
+            style={favoritesStyles.searchInput}
+            placeholder="Search favorites"
+            placeholderTextColor="#B5B5B5"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+      
+      <View style={favoritesStyles.categoriesContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {categories.map((category, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={[
+                favoritesStyles.categoryButton, 
+                activeCategory === category && favoritesStyles.activeCategoryButton
+              ]}
+              onPress={() => setActiveCategory(category)}
+            >
+              <Text 
+                style={[
+                  favoritesStyles.categoryText, 
+                  activeCategory === category && favoritesStyles.activeCategoryText
+                ]}
+              >
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
       
       <FlatList
-        data={favorites}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
+        data={filteredFavorites}
+        keyExtractor={(item, index) => index.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={favoritesStyles.recipesList}
+        renderItem={({ item, index }) => (
+          <TouchableOpacity 
             style={favoritesStyles.recipeCard}
-            onPress={() => viewDetectionDetails(item.id)}
+            onPress={handleRecipePress}
           >
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={favoritesStyles.recipeImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[favoritesStyles.recipeImage, favoritesStyles.placeholderImage]}>
-                <Text style={favoritesStyles.placeholderText}>{item.source === 'text' ? 'T' : 'I'}</Text>
-              </View>
-            )}
-            <View style={favoritesStyles.recipeInfo}>
-              <Text style={favoritesStyles.recipeTitle} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <Text style={favoritesStyles.recipeDescription} numberOfLines={2}>
-                {item.items.join(', ')}
-              </Text>
-              <View style={favoritesStyles.recipeMetrics}>
-                <View style={favoritesStyles.metricItem}>
+            <Image source={{ uri: item.image }} style={favoritesStyles.recipeImage} />
+            <View style={favoritesStyles.recipeContent}>
+              <Text style={favoritesStyles.recipeTitle}>{item.title}</Text>
+              <Text style={favoritesStyles.recipeDescription}>{item.description}</Text>
+              <View style={favoritesStyles.recipeDetails}>
+                <View style={favoritesStyles.detailItem}>
                   <Clock size={12} color="#202026" />
-                  <Text style={favoritesStyles.recipeMetric}>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
+                  <Text style={favoritesStyles.detailText}>{item.time}</Text>
                 </View>
-                {item.nutritionalInfo?.calories && (
-                  <Text style={favoritesStyles.recipeMetric}>
-                    {item.nutritionalInfo.calories} cal
-                  </Text>
-                )}
+                <View style={favoritesStyles.detailItem}>
+                  <Star size={12} color="#000000" />
+                  <Text style={favoritesStyles.detailText}>{item.rating}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={favoritesStyles.openButton}
+                  onPress={handleRecipePress}
+                >
+                  <Text style={favoritesStyles.openButtonText}>Open</Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <View style={favoritesStyles.actionButtons}>
-              <TouchableOpacity
-                style={favoritesStyles.favoriteButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  removeFromFavorites(item.id);
-                }}
-              >
-                <Heart size={20} color="#FF5353" fill="#FF5353" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={favoritesStyles.detailsButton}
-                onPress={() => viewDetectionDetails(item.id)}
-              >
-                <ChevronRight size={20} color="#202026" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={favoritesStyles.heartButton}
+              onPress={() => toggleFavorite(index)}
+            >
+              <Heart size={14} color="#FF5353" fill="#FF5353" />
+            </TouchableOpacity>
           </TouchableOpacity>
         )}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#FF5353"]}
-            tintColor="#FF5353"
-          />
-        }
-        contentContainerStyle={favoritesStyles.listContent}
+        ListEmptyComponent={() => (
+          <View style={favoritesStyles.emptyStateContainer}>
+            <View style={favoritesStyles.emptyStateIconContainer}>
+              <Heart size={30} color="#202026" />
+            </View>
+            <Text style={favoritesStyles.emptyStateTitle}>No Favorites Yet</Text>
+            <Text style={favoritesStyles.emptyStateDescription}>
+              You haven't added any favorites. Explore recipes and save your favorites here.
+            </Text>
+            <TouchableOpacity
+              style={favoritesStyles.emptyStateButton}
+              onPress={() => router.push('/recipes')}
+            >
+              <Text style={favoritesStyles.emptyStateButtonText}>Explore Recipes</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       />
     </View>
   );

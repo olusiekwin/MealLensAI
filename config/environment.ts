@@ -57,20 +57,16 @@ interface EnvironmentConfig {
 const ENV = {
     development: {
         // Use local backend for development
-        API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
+        API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000',
         // Remote backend URL for services that require it
-        REMOTE_API_URL: 'https://meallensai-backend.onrender.com/api/v1',
+        REMOTE_API_URL: 'https://meallensai-backend.onrender.com',
         // Services that should use the remote backend even in development
         REMOTE_SERVICES: [
-            '/auth',  // All auth endpoints
-            '/detect'  // All detection endpoints
+            '/detect'  // Only detection endpoints use remote backend
         ],
         // Services that should use mock data if backend is unavailable
         MOCKABLE_SERVICES: [
-            'user/profile',
-            'user/preferences',
-            'usage/track',
-            'subscription'
+            'usage/track'  // Only keep usage tracking as mockable for now
         ],
         AI_API: {
             BASE_URL: 'https://ai-utu2.onrender.com', // AI is on a separate server
@@ -88,23 +84,16 @@ const ENV = {
         USE_MOCK_ADS: false, // Disable mock ads to use real ads API
     },
     production: {
-        API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://meallensai-backend.onrender.com/api/v1',
+        API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://meallensai-backend.onrender.com',
         // Remote backend URL (same as main API_URL in production)
-        REMOTE_API_URL: 'https://meallensai-backend.onrender.com/api/v1',
+        REMOTE_API_URL: 'https://meallensai-backend.onrender.com',
         // Services that should use the remote backend
         REMOTE_SERVICES: [
-            '/auth/login',
-            '/auth/register',
-            '/auth/google',
-            '/auth/apple',
-            '/detect'
+            '/detect'  // Only detection endpoints use remote backend
         ],
         // Services that should use mock data if backend is unavailable
         MOCKABLE_SERVICES: [
-            'user/profile',
-            'user/preferences',
-            'usage/track',
-            'subscription'
+            'usage/track'  // Only keep usage tracking as mockable for now
         ],
         AI_API: {
             BASE_URL: 'https://ai-utu2.onrender.com', // AI is on a separate server

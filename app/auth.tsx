@@ -17,24 +17,42 @@ import {
   Animated,
   SafeAreaView,
   StatusBar as RNStatusBar,
+  StyleSheet,
 } from "react-native"
 import { useRouter } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from "lucide-react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { authStyles } from "@/styles/auth.styles"
-import authService from "@/services/authService"
+import * as authService from "@/services/authService"
+
+const styles = StyleSheet.create({
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#202026',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+})
 
 export default function AuthScreen(): React.ReactElement {
   const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [initError, setInitError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [username, setUsername] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [passwordError, setPasswordError] = useState("")
   const [generalError, setGeneralError] = useState("")
   const [focusedInput, setFocusedInput] = useState<"email" | "password" | "confirmPassword" | "username" | null>(null)
@@ -45,25 +63,64 @@ export default function AuthScreen(): React.ReactElement {
   const scaleAnim = useRef(new Animated.Value(0.95)).current
 
   useEffect(() => {
-    const fadeIn = () => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start()
+    const checkAuthStatus = async () => {
+      try {
+        setIsLoading(true)
+        const isLoggedIn = await authService.isLoggedIn()
+        if (isLoggedIn) {
+          router.replace('/(tabs)/index')
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error)
+        setInitError('Failed to initialize. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
     }
-    fadeIn()
+    checkAuthStatus()
+  }, [router])
 
-    setCanGoBack(router.canGoBack())
-  }, [fadeAnim, scaleAnim])
+  if (isLoading) {
+    return (
+      <SafeAreaView style={authStyles.container}>
+        <ActivityIndicator size="large" color="#FF6B6B" />
+        <Text style={authStyles.subtitle}>Loading...</Text>
+      </SafeAreaView>
+    )
+  }
+
+  if (initError) {
+    return (
+      <SafeAreaView style={authStyles.container}>
+        <Text style={authStyles.title}>Error</Text>
+        <Text style={authStyles.subtitle}>{initError}</Text>
+        <TouchableOpacity 
+          style={authStyles.primaryButton} 
+          onPress={() => {
+            setInitError(null)
+            setIsLoading(true)
+            // Retry initialization
+            const checkAuthStatus = async () => {
+              try {
+                const isLoggedIn = await authService.isLoggedIn()
+                if (isLoggedIn) {
+                  router.replace('/(tabs)/index')
+                }
+              } catch (error) {
+                console.error('Retry failed:', error)
+                setInitError('Failed to initialize. Please try again.')
+              } finally {
+                setIsLoading(false)
+              }
+            }
+            checkAuthStatus()
+          }}
+        >
+          <Text style={authStyles.primaryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    )
+  }
 
   const validateForm = () => {
     setGeneralError("")
@@ -263,16 +320,22 @@ export default function AuthScreen(): React.ReactElement {
         resizeMode="cover"
       >
         <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.3)"]} style={authStyles.overlay}>
-          {/* Header with back button and logo */}
-          <View style={authStyles.header}>
-            {canGoBack && (
-              <TouchableOpacity style={authStyles.backButton} onPress={goBack}>
-                <ArrowLeft color="#FFFFFF" size={24} />
+          {/* Hide the custom header */}
+          <View style={{ display: 'none' }}>
+            <View style={authStyles.header}>
+              <TouchableOpacity 
+                style={authStyles.backButton} 
+                onPress={() => router.back()}
+              >
+                <ArrowLeft size={24} color="#FFFFFF" />
               </TouchableOpacity>
-            )}
-
-            <View style={authStyles.logoContainer}>
-              <Image source={require("../assets/images/logo-2.svg")} style={authStyles.logo} resizeMode="contain" />
+              <View style={authStyles.logoContainer}>
+                <Image 
+                  source={require('../assets/images/logo-2.svg')} 
+                  style={authStyles.logo} 
+                  resizeMode="contain"
+                />
+              </View>
             </View>
           </View>
 
@@ -293,9 +356,12 @@ export default function AuthScreen(): React.ReactElement {
                 ]}
               >
                 <View style={isLogin ? authStyles.formContainer : authStyles.formContainerRegister}>
-                  <Text style={isLogin ? authStyles.formTitle : authStyles.formTitleRegister}>
-                    {isLogin ? "Welcome Back" : "Create Account"}
+                  <View style={styles.header}>
+                    <Text style={styles.headerTitle}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+                    <Text style={styles.headerSubtitle}>
+                      {isLogin ? 'Sign in to continue' : 'Fill in your details to get started'}
                   </Text>
+                  </View>
 
                   {generalError ? (
                     <View style={isLogin ? authStyles.errorContainer : authStyles.errorContainerRegister}>

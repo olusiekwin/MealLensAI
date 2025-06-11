@@ -73,6 +73,15 @@
         "firebase": {
           "appId": "1:838657313693:web:YOUR_WEB_APP_ID"
         }
+      },
+      "bundler": "metro",
+      "output": "static",
+      "performance": {
+        "styleSheet": {
+          "timeout": 30000,
+          "minify": true,
+          "sourceMaps": false
+        }
       }
     },
     "plugins": [

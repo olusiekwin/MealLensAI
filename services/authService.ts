@@ -97,7 +97,7 @@ class AuthService {
     try {
       console.log('🔄 Attempting registration with:', { email: userData.email });
       const response = await retryRequest(() => 
-        api.post('/auth/register', userData)
+        api.post('/api/v1/auth/register', userData)
       );
       console.log('✅ Registration response:', response.data);
       return response.data;
@@ -112,57 +112,59 @@ class AuthService {
     try {
       console.log('🔄 Attempting login with:', { email: userData.email });
       
-      // Use axios directly with timeout configuration
       const response = await retryRequest(() => 
-        api.post('/auth/login', userData, {
+        api.post('/api/v1/auth/login', userData, {
           timeout: REQUEST_TIMEOUT
         })
       );
+      
       console.log('✅ Login response:', response.data);
       
-      // Extract data from the response
-      const responseData = response.data.data || response.data;
-      
-      // Create a modified response with token field and user data for compatibility
-      const modifiedResponse = {
-        success: response.data.success,
-        message: response.data.message,
-        error: response.data.error,
-        token: responseData.session?.token || responseData.session?.access_token,
-        user: responseData.user || { id: responseData.user_id || '' }
-      };
-      
-      // Log the actual response to debug token issues
-      console.log('Backend session token:', responseData.session?.token);
-      console.log('Backend access token:', responseData.session?.access_token);
-      
-      // Log the response structure to help with debugging
-      console.log('Backend response:', response.data);
-      console.log('Modified response structure:', {
-        success: modifiedResponse.success,
-        hasToken: !!modifiedResponse.token,
-        hasUser: !!modifiedResponse.user,
-        userId: modifiedResponse.user?.id
-      });
-      
-      if (modifiedResponse.success && modifiedResponse.token) {
-        console.log('🔑 Storing auth token...');
-        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, modifiedResponse.token);
-        await AsyncStorage.setItem(STORAGE_KEYS.USER_EMAIL, userData.email);
+      if (response.data.success && response.data.data) {
+        const { user, session } = response.data.data;
         
-        // Store user ID if available
-        if (modifiedResponse.user?.id) {
-          await AsyncStorage.setItem(STORAGE_KEYS.USER_ID, modifiedResponse.user.id);
-          console.log('✅ User ID stored:', modifiedResponse.user.id);
+        // Store auth tokens
+        if (session?.access_token) {
+          console.log('🔑 Storing auth tokens...');
+          await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, session.access_token);
+          await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, session.refresh_token);
+          await AsyncStorage.setItem(STORAGE_KEYS.USER_EMAIL, userData.email);
+          
+          // Store user ID if available
+          if (user?.id) {
+            await AsyncStorage.setItem(STORAGE_KEYS.USER_ID, user.id);
+            console.log('✅ User ID stored:', user.id);
+          }
+          
+          console.log('✅ Auth tokens stored successfully');
+          
+          return {
+            success: true,
+            token: session.access_token,
+            refresh_token: session.refresh_token,
+            user: user
+          };
+        } else {
+          console.warn('⚠️ No access token in response:', response.data);
+          return {
+            success: false,
+            error: {
+              message: 'No access token in response',
+              code: 'missing_token'
+            }
+          };
         }
-        
-        const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        console.log('✅ Token stored:', token ? 'Yes' : 'No');
-      } else {
-        console.warn('⚠️ No access token in response:', modifiedResponse);
       }
       
-      return modifiedResponse;
+      // Handle error response
+      return {
+        success: false,
+        error: response.data.error || {
+          message: 'Login failed',
+          code: 'unknown_error'
+        }
+      };
+      
     } catch (error: any) {
       console.log('❌ Login failed:', error);
       console.error('Login error details:', {
@@ -182,6 +184,15 @@ class AuthService {
           }
         };
       }
+      
+      // Return error from backend if available
+      if (error.response?.data?.error) {
+        return {
+          success: false,
+          error: error.response.data.error
+        };
+      }
+      
       return {
         success: false,
         error: {
@@ -196,7 +207,7 @@ class AuthService {
   async forgotPassword(email: string) {
     try {
       const response = await retryRequest(() => 
-        api.post('/auth/forgot-password', { email })
+        api.post('/api/v1/auth/forgot-password', { email })
       );
       return response.data;
     } catch (error: any) {
@@ -230,7 +241,7 @@ class AuthService {
     try {
       await api.request({
         method: 'delete',
-        url: '/auth/user/delete'
+        url: '/api/v1/auth/user/delete'
       });
       await AsyncStorage.removeItem('auth_token');
       return { success: true };
@@ -311,7 +322,7 @@ class AuthService {
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) throw new Error('No authentication token');
 
-      await axios.put(
+      await api.put(
         `${API_URL}/user/preferences/`,
         { preferences },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -323,4 +334,22 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+export const isLoggedIn = async (): Promise<boolean> => {
+  try {
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (!token) {
+      return false;
+    }
+    // Optionally, we can validate the token with the backend
+    // For now, just check if token exists
+    return true;
+  } catch (error) {
+    console.error('Error checking login status:', error);
+    return false;
+  }
+};
+
+export default {
+  isLoggedIn,
+  AuthService: new AuthService()
+};

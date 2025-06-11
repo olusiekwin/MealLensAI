@@ -1,8 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/config/constants';
 import ENV from '../config/environment';
+import { router } from 'expo-router';
 
 interface ApiError extends Error {
   code?: string;
@@ -28,9 +29,7 @@ const commonConfig: AxiosRequestConfig = {
   timeout: ENV.API_TIMEOUT,
   withCredentials: false,
   validateStatus: (status) => status >= 200 && status < 500,
-  // Handle redirects manually
   maxRedirects: 0,
-  // iOS simulator specific configuration
   ...(Platform.OS === 'ios' && {
     proxy: false,
     insecureHTTPParser: true
@@ -49,33 +48,67 @@ const remoteApi = axios.create({
   baseURL: REMOTE_API_BASE_URL,
 });
 
+// Token refresh flag to prevent multiple refresh attempts
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+// Subscribe to token refresh
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+// Notify subscribers about new token
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.map(cb => cb(token));
+  refreshSubscribers = [];
+};
+
+// Refresh access token using refresh token
+const refreshAccessToken = async (): Promise<string | null> => {
+  try {
+    const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refresh_token: refreshToken
+    });
+
+    const { access_token, refresh_token } = response.data;
+    
+    // Store new tokens
+    await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, access_token);
+    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
+    
+    return access_token;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return null;
+  }
+};
+
+// Global state for backend availability
+let USE_MOCK_DATA = false;
+let isBackendAvailable = false; // Initially assume backend is not available until proven otherwise
+let backendCheckPromise: Promise<boolean> | null = null;
+
 // Add interceptors to both API instances
-const addInterceptors = (apiInstance: AxiosInstance) => {
+const addInterceptors = (apiInstance: AxiosInstance, isRemote: boolean = false) => {
   apiInstance.interceptors.request.use(
     async (config) => {
       console.log('🔵 [API Request]', {
         method: config.method?.toUpperCase(),
         url: config.url,
-        baseURL: config.baseURL,
-        headers: config.headers,
-        data: config.data
+        baseURL: config.baseURL
       });
+      
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      if (token !== null) {
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('🔑 Added auth token to request');
-        
-        // Log token details for debugging (first 10 chars only for security)
-        console.log(`Token prefix: ${token.substring(0, 10)}...`);
-        
-        // Check if this is a session token or JWT token
-        try {
-          const isJWT = token.split('.').length === 3;
-          console.log(`Token type: ${isJWT ? 'JWT' : 'Session token'}`);
-        } catch (e) {
-          console.log('Could not determine token type');
-        }
       }
+      // Ensure headers exist
+      config.headers['Content-Type'] = 'application/json';
       return config;
     },
     (error) => {
@@ -88,21 +121,59 @@ const addInterceptors = (apiInstance: AxiosInstance) => {
     (response) => {
       console.log('✅ [API Response]', {
         url: response.config.url,
-        baseURL: response.config.baseURL,
-        status: response.status,
-        data: response.data
+        status: response.status
       });
       return response;
     },
-    (error) => {
-      console.error('❌ [API Error]', {
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-        headers: error.response?.headers
-      });
+    async (error: AxiosError) => {
+      const originalRequest = error.config;
+      
+      // Handle token expiration
+      if (error.response?.status === 401 && originalRequest && !originalRequest.retry) {
+        if (isRefreshing) {
+          // Wait for token refresh
+          try {
+            const token = await new Promise<string>((resolve) => {
+              subscribeTokenRefresh((token: string) => {
+                resolve(token);
+              });
+            });
+            
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiInstance(originalRequest);
+          } catch (err) {
+            console.error('Failed to retry with new token:', err);
+          }
+        }
+
+        originalRequest.retry = true;
+        isRefreshing = true;
+
+        try {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            onTokenRefreshed(newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return apiInstance(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+
+        // If refresh failed, redirect to login
+        await AsyncStorage.multiRemove([
+          STORAGE_KEYS.AUTH_TOKEN,
+          STORAGE_KEYS.REFRESH_TOKEN,
+          STORAGE_KEYS.USER_EMAIL
+        ]);
+        
+        // Use expo-router to navigate to login
+        router.replace('/auth');
+        
+        return Promise.reject(error);
+      }
       
       // Create a custom error with additional properties
       const apiError = new Error(error.message) as ApiError;
@@ -122,33 +193,78 @@ addInterceptors(remoteApi);
 
 // Smart API function that routes requests to the appropriate backend
 const api = {
-  async request(config: AxiosRequestConfig) {
-    const url = config.url || '';
-    
-    // Check if this service should use the remote backend
-    const useRemote = ENV.REMOTE_SERVICES.some(service => url.startsWith(service));
-    
+  async healthCheck(): Promise<boolean> {
     try {
-      // Use the appropriate API instance
-      const apiInstance = useRemote ? remoteApi : localApi;
-      console.log(`🌐 Using ${useRemote ? 'remote' : 'local'} backend for ${url}`);
+      console.log('🩺 Performing health check...');
+      const response = await localApi.get('/health', { timeout: 5000 });
+      const isHealthy = response.status === 200 && response.data?.status === 'ok';
+      console.log(`🏥 Health check result: ${isHealthy ? '✅ Healthy' : '❌ Unhealthy'}`, response.data);
+      return isHealthy;
+    } catch (error: any) {
+      console.error('❌ Health check failed:', error.message || error);
+      // Force fallback to mock data since backend is known to be down
+      USE_MOCK_DATA = true;
+      return false;
+    }
+  },
+  
+  async request(config: AxiosRequestConfig): Promise<any> {
+    try {
+      // Determine which API instance to use based on the URL
+      const apiInstance = config.url?.startsWith('/api/v1/ai/') ? remoteApi : localApi;
+      console.log(`🌐 Making ${config.method?.toUpperCase() || 'REQUEST'} to ${config.url} using ${apiInstance === localApi ? 'LOCAL' : 'REMOTE'} API`);
+
+      // If we know backend is down, use mock data immediately
+      if (USE_MOCK_DATA) {
+        console.log('🔄 Backend is down, using mock data for', config.url);
+        const mockData = getMockDataForEndpoint(config.url || '');
+        return {
+          status: 200,
+          data: mockData,
+          headers: {},
+          statusText: 'OK',
+          config: config,
+        };
+      }
+      
+      // Check if backend is available before making the request
+      if (!isBackendAvailable && !USE_MOCK_DATA) {
+        // If backend status is unknown or previously failed, test connection
+        if (!backendCheckPromise) {
+          backendCheckPromise = testBackendConnection();
+        }
+        const isAvailable = await backendCheckPromise.catch(() => false);
+        isBackendAvailable = isAvailable;
+        if (!isAvailable) {
+          console.warn('⚠️ Backend is not available, falling back to mock data for', config.url);
+          USE_MOCK_DATA = true;
+          const mockData = getMockDataForEndpoint(config.url || '');
+          return {
+            status: 200,
+            data: mockData,
+            headers: {},
+            statusText: 'OK',
+            config: config,
+          };
+        }
+      }
       
       // Try to make the request
       const response = await apiInstance.request(config);
       
       // Check if we got a 404 response from the backend
       if (response.status === 404 && response.data?.code === 404) {
-        console.warn(`⚠️ Backend endpoint not found: ${url}`);
+        console.warn(`⚠️ Backend endpoint not found: ${config.url}`);
         
         // Check if this service is mockable
-        const isMockable = ENV.MOCKABLE_SERVICES.some(service => url.includes(service));
+        const isMockable = ENV.MOCKABLE_SERVICES.some(service => config.url?.includes(service));
         if (isMockable) {
-          console.log(`📑 Using mock data for ${url}`);
+          console.log(`📑 Using mock data for ${config.url}`);
           return {
             data: {
               success: true,
               message: 'Using mock data (backend unavailable)',
-              data: getMockDataForEndpoint(url)
+              data: getMockDataForEndpoint(config.url || '')
             },
             status: 200
           };
@@ -159,24 +275,24 @@ const api = {
     } catch (error) {
       // Check if this is a network error (backend down)
       if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
-        console.warn(`⚠️ Backend connection failed for ${url}`);
+        console.warn(`⚠️ Backend connection failed for ${config.url}`);
         
         // Check if this service is mockable
-        const isMockable = ENV.MOCKABLE_SERVICES.some(service => url.includes(service));
+        const isMockable = ENV.MOCKABLE_SERVICES.some(service => config.url?.includes(service));
         if (isMockable) {
-          console.log(`📑 Using mock data for ${url}`);
+          console.log(`📑 Using mock data for ${config.url}`);
           return {
             data: {
               success: true,
               message: 'Using mock data (backend unavailable)',
-              data: getMockDataForEndpoint(url)
+              data: getMockDataForEndpoint(config.url || '')
             },
             status: 200
           };
         }
       }
       
-      console.error(`❌ Error with ${url}:`, error);
+      console.error(`❌ Error with ${config.url}:`, error.message || error);
       throw error;
     }
   },
@@ -201,17 +317,6 @@ const api = {
   async patch(url: string, data?: any, config?: AxiosRequestConfig) {
     return this.request({ ...config, method: 'patch', url, data });
   },
-  
-  // Health check to determine if the backend is available
-  async healthCheck() {
-    try {
-      const response = await this.get('/health');
-      return response?.data?.status === 'healthy';
-    } catch (error) {
-      console.error('❌ Health check failed:', error);
-      return false;
-    }
-  }
 };
 
 export const testBackendConnection = async () => {

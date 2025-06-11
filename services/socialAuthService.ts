@@ -1,8 +1,8 @@
-import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
+import { STORAGE_KEYS } from '@/config/constants';
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -20,32 +20,23 @@ export const socialAuthService = {
       // Get the users ID token
       const { idToken } = await GoogleSignin.signIn();
 
-      // Create a Google credential with the token
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-      // Sign-in the user with the credential
-      const userCredential = await auth().signInWithCredential(googleCredential);
-      
-      // Get the user's ID token
-      const token = await userCredential.user.getIdToken();
-      
-      // Store the token in AsyncStorage
-      await AsyncStorage.setItem('auth_token', token);
-      
-      // Register/Login with your backend only (never remote)
-      const response = await api.post('/auth/social', {
-        provider: 'google',
-        token: token,
-        email: userCredential.user.email,
-        name: userCredential.user.displayName,
+      // Send the token to our backend for verification and account creation/login
+      const response = await api.post('/api/v1/auth/google', {
+        idToken: idToken
       });
+
+      if (response.data.success) {
+        // Store the backend-issued token
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
 
       return {
         success: true,
         user: response.data.user,
-        token: response.data.token, // Always use backend-issued token
+          token: response.data.token
       };
+      }
 
+      throw new Error('Backend authentication failed');
     } catch (error) {
       console.error('Google Sign-In Error:', error);
       throw error;
@@ -66,32 +57,25 @@ export const socialAuthService = {
         throw new Error('Apple Sign-In failed - no identity token returned');
       }
 
-      // Create a Firebase credential from the response
-      const { identityToken, nonce } = appleAuthRequestResponse;
-      const appleCredential = auth.AppleAuthProvider.credential(identityToken, nonce);
-
-      // Sign in with the credential
-      const userCredential = await auth().signInWithCredential(appleCredential);
-      
-      // Get the user's ID token
-      const token = await userCredential.user.getIdToken();
-      
-      // Store the token in AsyncStorage
-      await AsyncStorage.setItem('auth_token', token);
-      
-      // Register/Login with your backend
-      const response = await api.post('/auth/social', {
-        provider: 'apple',
-        token: token,
-        email: userCredential.user.email,
-        name: appleAuthRequestResponse.fullName?.givenName,
+      // Send the token to our backend for verification and account creation/login
+      const response = await api.post('/api/v1/auth/apple', {
+        identityToken: appleAuthRequestResponse.identityToken,
+        nonce: appleAuthRequestResponse.nonce,
+        fullName: appleAuthRequestResponse.fullName
       });
+
+      if (response.data.success) {
+        // Store the backend-issued token
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.data.token);
 
       return {
         success: true,
         user: response.data.user,
-        token: token,
+          token: response.data.token
       };
+      }
+
+      throw new Error('Backend authentication failed');
     } catch (error) {
       console.error('Apple Sign-In Error:', error);
       throw error;
@@ -101,10 +85,16 @@ export const socialAuthService = {
   // Sign out
   signOut: async () => {
     try {
-      await auth().signOut();
-      await GoogleSignin.revokeAccess();
-      await GoogleSignin.signOut();
-      await AsyncStorage.removeItem('auth_token');
+      // Revoke access on the client side
+      await GoogleSignin.revokeAccess().catch(() => {});
+      await GoogleSignin.signOut().catch(() => {});
+      
+      // Call backend to invalidate the session
+      await api.post('/api/v1/auth/logout');
+      
+      // Clear local storage
+      await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      
       return { success: true };
     } catch (error) {
       console.error('Sign Out Error:', error);

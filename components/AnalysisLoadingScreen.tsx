@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Image, Dimensions, Platform } from 'react-native';
 
 interface AnalysisLoadingScreenProps {
   message?: string;
@@ -47,10 +47,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    }),
   },
   logo: {
     width: 100,

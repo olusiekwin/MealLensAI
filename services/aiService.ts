@@ -1,6 +1,7 @@
 import { AI_ENDPOINTS, STORAGE_KEYS, API_URL } from '@/config/constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from './api';
 
 export interface DetectionResult {
   success: boolean;
@@ -89,19 +90,12 @@ class AIService {
       const token = await this.getAuthToken();
       if (!token) return;
 
-      await fetch(`${API_URL}/api/v1/analytics/log`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      await api.post('/analytics/log', {
           action,
           params,
           result: typeof result === 'object' ? JSON.stringify(result) : result,
           status,
           timestamp: new Date().toISOString()
-        })
       });
     } catch (error: any) {
       console.error('Error logging interaction:', error);
@@ -225,84 +219,87 @@ class AIService {
 
   async detectFood(imageBase64: string): Promise<DetectionResult> {
     try {
-      // Call the local backend endpoint
-      const response = await fetch('/detect', {
+      const token = await this.getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/v1/detect`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ image: imageBase64 })
       });
       
       if (response.ok) {
         const data = await response.json();
+        await this.logInteraction('detect_food', { source: 'image' }, data, 'success');
         return data;
       } else {
         console.error('Error in detectFood: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('detect_food', { source: 'image' }, { error: errorData }, 'error');
         return this.getMockDetectionResult();
       }
     } catch (error: any) {
       console.error('Error in detectFood:', error);
-      // If there's an error, use mock data to ensure the app works
+      await this.logInteraction('detect_food', { source: 'image' }, { error: error.message }, 'error');
       return this.getMockDetectionResult();
     }
   }
 
   async processFood(detectedItems: string[], source: 'image' | 'text' = 'image'): Promise<ProcessedResult> {
     try {
-      // For text input, we use the /process endpoint with ingredient_list
-      // For image input, we use the /food_detect endpoint (already handled by detectFood)
-      if (source === 'image') {
-        throw new Error('For image processing, use detectFood method instead');
-      }
-
-      // Call the local backend endpoint
-      const response = await fetch('/detect/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ items: detectedItems, source })
+      const token = await this.getAuthToken();
+      const endpoint = token ? AI_ENDPOINTS.AUTH_PROCESS : AI_ENDPOINTS.PROCESS;
+      
+      const response = await api.post(endpoint, {
+        ingredient_list: detectedItems
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          ...data,
-          id: data.detection_id || generateUUID(),
-          timestamp: new Date().toISOString()
-        };
-      } else {
-        console.error('Error in processFood: Backend returned error', response.status);
-        return this.getMockProcessedResult();
-      }
+      await this.logInteraction('process_food', { items: detectedItems, source }, response.data, 'success');
+      return response.data;
     } catch (error: any) {
-      console.error('Error in processFood:', error);
-      // If there's an error, use mock data to ensure the app works
+      await this.logInteraction('process_food', { items: detectedItems, source }, error.message, 'error');
+      console.error('Error processing food:', error);
+      // Return mock data in case of error
       return this.getMockProcessedResult();
     }
   }
   
   async getInstructions(foodItem: string, analysisId?: string): Promise<CookingInstructions> {
     try {
-      // Call the local backend endpoint only
-      const response = await fetch('/detect/instructions', {
+      const token = await this.getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/v1/detect/instructions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ food: foodItem, detection_id: analysisId })
       });
+      
       if (response.ok) {
         const data = await response.json();
+        await this.logInteraction('get_instructions', { food: foodItem, detection_id: analysisId }, data, 'success');
         return data;
       } else {
         console.error('Error in getInstructions: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('get_instructions', { food: foodItem, detection_id: analysisId }, { error: errorData }, 'error');
         return this.getMockInstructions();
       }
     } catch (error: any) {
       console.error('Error in getInstructions:', error);
-      // If there's an error, use mock data to ensure the app works
+      await this.logInteraction('get_instructions', { food: foodItem, detection_id: analysisId }, { error: error.message }, 'error');
       return this.getMockInstructions();
     }
   }
@@ -313,23 +310,28 @@ class AIService {
       if (!token) {
         return []; // Return empty array if not authenticated
       }
-      // Call the local backend endpoint only
-      const response = await fetch('/detect/history', {
+
+      const response = await fetch(`${API_URL}/api/v1/detect/history`, {
         method: 'GET',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
+
       if (response.ok) {
         const data = await response.json();
+        await this.logInteraction('get_user_history', {}, data, 'success');
         return data;
       } else {
         console.error('Error in getUserHistory: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('get_user_history', {}, { error: errorData }, 'error');
         return [];
       }
     } catch (error: any) {
       console.error('Error in getUserHistory:', error);
-      // If there's an error, return empty array
+      await this.logInteraction('get_user_history', {}, { error: error.message }, 'error');
       return [];
     }
   }
@@ -342,8 +344,7 @@ class AIService {
         return { remaining: 3, limit: 3 }; // Default values for non-authenticated users
       }
       
-      // This is a custom endpoint in our backend, not part of the AI API
-      const response = await fetch(AI_ENDPOINTS.AUTH_DAILY_LIMIT, {
+      const response = await fetch(`${API_URL}/api/v1/detect/daily-limit`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -351,63 +352,90 @@ class AIService {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to check daily limit');
+      if (response.ok) {
+        const result = await response.json();
+        await this.logInteraction('check_daily_limit', {}, result, 'success');
+        return {
+          remaining: result.remaining || 0,
+          limit: result.limit || 3
+        };
+      } else {
+        console.error('Error in checkDailyLimit: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('check_daily_limit', {}, { error: errorData }, 'error');
+        return { remaining: 3, limit: 3 }; // Default fallback values
       }
-
-      const result = await response.json();
-      return {
-        remaining: result.remaining || 0,
-        limit: result.limit || 3
-      };
     } catch (error: any) {
       console.error('Error in checkDailyLimit:', error);
+      await this.logInteraction('check_daily_limit', {}, { error: error.message }, 'error');
       return { remaining: 3, limit: 3 }; // Default fallback values
     }
   }
   
   async getResources(foodItem: string): Promise<ResourcesResult> {
     try {
-      // Only use the backend-proxied endpoint
-      const response = await fetch('/detect/resources', {
+      const token = await this.getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/v1/detect/resources`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ food: foodItem })
       });
+      
       if (response.ok) {
         const data = await response.json();
+        await this.logInteraction('get_resources', { food: foodItem }, data, 'success');
         return data;
       } else {
         console.error('Error in getResources: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('get_resources', { food: foodItem }, { error: errorData }, 'error');
         return this.getMockResources();
       }
     } catch (error: any) {
       console.error('Error in getResources:', error);
+      await this.logInteraction('get_resources', { food: foodItem }, { error: error.message }, 'error');
       return this.getMockResources();
     }
   }
   
   async getFoodDetectResources(detectedItems: string[]): Promise<ResourcesResult[]> {
     try {
-      // Only use the backend-proxied endpoint
-      const response = await fetch('/detect/food_detect_resources', {
+      const token = await this.getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/v1/detect/food_detect_resources`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ detected_items: detectedItems })
       });
+      
       if (response.ok) {
         const data = await response.json();
+        await this.logInteraction('get_food_detect_resources', { items: detectedItems }, data, 'success');
         return data;
       } else {
         console.error('Error in getFoodDetectResources: Backend returned error', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        await this.logInteraction('get_food_detect_resources', { items: detectedItems }, { error: errorData }, 'error');
         return [this.getMockResources(), this.getMockResources()];
       }
     } catch (error: any) {
       console.error('Error in getFoodDetectResources:', error);
+      await this.logInteraction('get_food_detect_resources', { items: detectedItems }, { error: error.message }, 'error');
       return [this.getMockResources(), this.getMockResources()];
     }
   }

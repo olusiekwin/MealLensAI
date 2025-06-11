@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Zap, Crown } from 'lucide-react-native';
 import { useUserStore } from '@/context/userStore';
@@ -44,10 +44,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0, 0, 0, 0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+    }),
     elevation: 2,
   },
   iconContainer: {
