@@ -20,6 +20,10 @@ import {
 import { Search, Filter, Clock, Star, Heart, Camera, UtensilsCrossed, Plus, Type, Upload, X } from "lucide-react-native"
 import { useRouter } from "expo-router"
 import { detectionStyles } from "../../styles/detection.styles"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '../../config/constants';
+import { detectFromIngredients } from '../../services/detectionService';
+import { useAuth } from '../../context/AuthContext';
 
 const { width, height } = Dimensions.get("window")
 
@@ -53,6 +57,7 @@ export default function DetectionScreen() {
     | "ingredient-upload"
   >("choose-type")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const { isAuthenticated } = useAuth();
 
   // Mock data for demonstration
   useEffect(() => {
@@ -94,30 +99,32 @@ export default function DetectionScreen() {
   }
 
   const handleIngredientDetect = async () => {
-    if (!ingredientInput.trim()) return
-    setIsDetecting(true)
-    setDetectError(null)
-    Keyboard.dismiss()
+    if (!ingredientInput.trim()) return;
+    setIsDetecting(true);
+    setDetectError(null);
+    Keyboard.dismiss();
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      const newDetection: DetectionItem = {
-        id: Date.now().toString(),
-        title: "Detection Results",
-        description: `From ingredients: ${ingredientInput.slice(0, 50)}...`,
-        timestamp: new Date().toISOString(),
-        accuracy: "92%",
-        isFavorite: false,
-        category: "Ingredients",
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      if (!token) throw new Error('You must be logged in to use detection.');
+      const response = await detectFromIngredients(ingredientInput, token);
+      if (response?.data?.data) {
+        // If backend returns a detection ID, navigate to details screen
+        const detectionId = response.data.data.id || response.data.data.detection_id;
+        if (detectionId) {
+          router.push({ pathname: '/detection-details', params: { detectionId } });
+        } else {
+          // If backend returns full detection result, pass as param
+          router.push({ pathname: '/detection-details', params: { detection: JSON.stringify(response.data.data) } });
+        }
+        resetModal();
+      } else {
+        throw new Error('No detection result returned.');
       }
-
-      setDetectionHistory((prev) => [newDetection, ...prev])
-      resetModal()
     } catch (error: any) {
-      setDetectError(error?.message || "Detection failed.")
+      setDetectError(error?.message || 'Detection failed.');
     } finally {
-      setIsDetecting(false)
+      setIsDetecting(false);
     }
   }
 
