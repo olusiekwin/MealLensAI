@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { X, Zap, Clock } from 'lucide-react-native';
 import { useAdStore } from '@/context/adStore';
-import { useUserStore } from '@/context/userStore';
 import adService, { Ad } from '@/services/adService';
 
 const { width } = Dimensions.get('window');
@@ -111,11 +110,10 @@ const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
         await adService.trackAdInteraction(currentAd.id, 'complete');
         
         // Update the user's remaining usage in the store
-        const userStore = useUserStore.getState();
-        userStore.incrementDailyUsageRemaining(currentAd.rewardAmount || 1);
-        
-        // Call the callback with success
-        onAdCompleted(true, userStore.usage.dailyUsageCount);
+        // TODO: Replace with context or AsyncStorage logic if needed
+        // userStore.incrementDailyUsageRemaining(currentAd.rewardAmount || 1);
+        // onAdCompleted(true, userStore.usage.dailyUsageCount);
+        onAdCompleted(true, 1); // Placeholder, update with real value if needed
       } catch (err) {
         console.error('Error completing rewarded ad:', err);
         onAdCompleted(false, 0);

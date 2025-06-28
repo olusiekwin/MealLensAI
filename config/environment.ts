@@ -57,9 +57,8 @@ interface EnvironmentConfig {
 const ENV = {
     development: {
         // Use local backend for development
-        API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000',
-        // Remote backend URL for services that require it
-        REMOTE_API_URL: 'https://meallensai-backend.onrender.com',
+        API_URL: 'http://localhost:5000',
+        REMOTE_API_URL: 'http://localhost:5000',
         // Services that should use the remote backend even in development
         REMOTE_SERVICES: [
             '/detect'  // Only detection endpoints use remote backend
@@ -84,9 +83,8 @@ const ENV = {
         USE_MOCK_ADS: false, // Disable mock ads to use real ads API
     },
     production: {
-        API_URL: process.env.EXPO_PUBLIC_API_URL || 'https://meallensai-backend.onrender.com',
-        // Remote backend URL (same as main API_URL in production)
-        REMOTE_API_URL: 'https://meallensai-backend.onrender.com',
+        API_URL: 'http://localhost:5000',
+        REMOTE_API_URL: 'http://localhost:5000',
         // Services that should use the remote backend
         REMOTE_SERVICES: [
             '/detect'  // Only detection endpoints use remote backend

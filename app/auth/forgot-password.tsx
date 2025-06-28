@@ -20,7 +20,6 @@ import { useRouter } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react-native"
 import { authStyles } from "@/styles/auth.styles"
-import authService from "@/services/authService"
 
 export default function ForgotPasswordScreen(): React.ReactElement {
   const router = useRouter()
@@ -74,7 +73,8 @@ export default function ForgotPasswordScreen(): React.ReactElement {
     setIsLoading(true)
 
     try {
-      const response = await authService.forgotPassword(email)
+      // Replace with your API call for sending password reset email
+      const response = await fakeApiCallToSendResetEmail(email)
 
       if (response.success) {
         setIsSubmitted(true)
@@ -225,4 +225,14 @@ export default function ForgotPasswordScreen(): React.ReactElement {
       </ImageBackground>
     </SafeAreaView>
   )
+}
+
+// Mock API call function - replace with your actual API call
+const fakeApiCallToSendResetEmail = async (email: string) => {
+  return new Promise<{ success: boolean; error?: { message: string } }>((resolve) => {
+    setTimeout(() => {
+      // Simulate success response
+      resolve({ success: true })
+    }, 2000)
+  })
 }

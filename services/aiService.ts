@@ -84,8 +84,16 @@ class AIService {
     return Platform.OS;
   }
 
-  private async logInteraction(action: string, params: any, result: any, status: 'success' | 'error'): Promise<void> {
+  async logInteraction(action: string, params: any, result: any, status: 'success' | 'error'): Promise<void> {
     try {
+      if (
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ) {
+        // Skip analytics in dev/local
+        return;
+      }
+
       // Only log if we have a token
       const token = await this.getAuthToken();
       if (!token) return;
@@ -97,124 +105,12 @@ class AIService {
           status,
           timestamp: new Date().toISOString()
       });
-    } catch (error: any) {
-      console.error('Error logging interaction:', error);
+    } catch (error) {
+      // Silently ignore analytics errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Analytics error (dev):', error);
+      }
     }
-  }
-
-  // Mock data methods to ensure the app works even when the AI server is unavailable
-  private getMockDetectionResult(): DetectionResult {
-    const detectionId = generateUUID();
-    return {
-      success: true,
-      data: {
-        items: ['chicken', 'rice', 'onions', 'bell peppers', 'garlic'],
-        confidence: [0.8, 0.7, 0.6, 0.5, 0.4],
-        instructions: 'Cook the chicken and rice together with some onions and bell peppers.'
-      },
-      detection_id: detectionId,
-      food_suggestions: [
-        'Chicken Fried Rice',
-        'Chicken Stir Fry',
-        'Chicken and Rice Casserole'
-      ],
-      nutritionalInfo: {
-        calories: 450,
-        protein: 30,
-        carbs: 45,
-        fat: 15
-      }
-    };
-  }
-  
-  private getMockProcessedResult(): ProcessedResult {
-    return {
-      id: generateUUID(),
-      timestamp: new Date().toISOString(),
-      ingredients: ['chicken', 'rice', 'onions', 'bell peppers', 'garlic'],
-      food_suggestions: [
-        'Chicken Fried Rice',
-        'Chicken Stir Fry',
-        'Chicken and Rice Casserole'
-      ],
-      nutritionalInfo: {
-        calories: 450,
-        protein: 30,
-        carbs: 45,
-        fat: 15
-      }
-    };
-  }
-  
-  private getMockInstructions(): CookingInstructions {
-    return {
-      title: 'Chicken Fried Rice',
-      ingredients: [
-        '2 cups cooked rice',
-        '1 lb chicken breast, diced',
-        '1 onion, chopped',
-        '2 bell peppers, chopped',
-        '3 cloves garlic, minced',
-        '3 tbsp soy sauce',
-        '2 tbsp vegetable oil',
-        '2 eggs, beaten'
-      ],
-      steps: [
-        { text: 'Heat oil in a large skillet or wok over medium-high heat.' },
-        { text: 'Add diced chicken and cook until no longer pink, about 5-7 minutes.' },
-        { text: 'Add onions, bell peppers, and garlic. Stir-fry for 3-4 minutes until vegetables begin to soften.' },
-        { text: 'Push everything to one side of the pan and pour beaten eggs into the empty space. Scramble until cooked through.' },
-        { text: 'Add cooked rice and soy sauce. Mix everything together and cook for another 3-4 minutes until heated through.' },
-        { text: 'Serve hot, garnished with green onions if desired.' }
-      ],
-      tips: [
-        { text: 'Use day-old cold rice for best results - freshly cooked rice can become mushy.' },
-        { text: 'Add a dash of sesame oil at the end for extra flavor.' },
-        { text: 'Feel free to add other vegetables like peas, carrots, or corn.' }
-      ],
-      estimatedTime: 30,
-      difficulty: 'Easy'
-    };
-  }
-  
-  private getMockResources(): ResourcesResult {
-    return {
-      title: 'Chicken Fried Rice',
-      youtube_links: [
-        {
-          title: 'Easy Chicken Fried Rice Recipe',
-          url: 'https://www.youtube.com/watch?v=qH__o17xHls',
-          thumbnail: 'https://i.ytimg.com/vi/qH__o17xHls/hqdefault.jpg'
-        },
-        {
-          title: 'The BEST Chicken Fried Rice Recipe',
-          url: 'https://www.youtube.com/watch?v=7AxydboW8v8',
-          thumbnail: 'https://i.ytimg.com/vi/7AxydboW8v8/hqdefault.jpg'
-        },
-        {
-          title: 'How to Make Perfect Fried Rice Every Time',
-          url: 'https://www.youtube.com/watch?v=n10xBmqehik',
-          thumbnail: 'https://i.ytimg.com/vi/n10xBmqehik/hqdefault.jpg'
-        }
-      ],
-      google_links: [
-        {
-          title: 'Easy Chicken Fried Rice Recipe - Allrecipes',
-          url: 'https://www.allrecipes.com/recipe/79543/fried-rice-restaurant-style/',
-          snippet: 'Make restaurant-style fried rice at home with this easy recipe.'
-        },
-        {
-          title: 'The Best Chicken Fried Rice - Food Network',
-          url: 'https://www.foodnetwork.com/recipes/food-network-kitchen/chicken-fried-rice-recipe-2103725',
-          snippet: 'This homemade version is healthier than takeout and ready in just 30 minutes.'
-        },
-        {
-          title: '15-Minute Chicken Fried Rice - Cooking Classy',
-          url: 'https://www.cookingclassy.com/chicken-fried-rice/',
-          snippet: 'Quick and easy chicken fried rice that tastes better than takeout!'
-        }
-      ]
-    };
   }
 
   async detectFood(imageBase64: string): Promise<DetectionResult> {
@@ -242,12 +138,12 @@ class AIService {
         console.error('Error in detectFood: Backend returned error', response.status);
         const errorData = await response.json().catch(() => ({}));
         await this.logInteraction('detect_food', { source: 'image' }, { error: errorData }, 'error');
-        return this.getMockDetectionResult();
+        throw new Error('Failed to detect food');
       }
     } catch (error: any) {
       console.error('Error in detectFood:', error);
       await this.logInteraction('detect_food', { source: 'image' }, { error: error.message }, 'error');
-      return this.getMockDetectionResult();
+      throw error;
     }
   }
 
@@ -265,8 +161,7 @@ class AIService {
     } catch (error: any) {
       await this.logInteraction('process_food', { items: detectedItems, source }, error.message, 'error');
       console.error('Error processing food:', error);
-      // Return mock data in case of error
-      return this.getMockProcessedResult();
+      throw error;
     }
   }
   
@@ -295,12 +190,12 @@ class AIService {
         console.error('Error in getInstructions: Backend returned error', response.status);
         const errorData = await response.json().catch(() => ({}));
         await this.logInteraction('get_instructions', { food: foodItem, detection_id: analysisId }, { error: errorData }, 'error');
-        return this.getMockInstructions();
+        throw new Error('Failed to get instructions');
       }
     } catch (error: any) {
       console.error('Error in getInstructions:', error);
       await this.logInteraction('get_instructions', { food: foodItem, detection_id: analysisId }, { error: error.message }, 'error');
-      return this.getMockInstructions();
+      throw error;
     }
   }
   
@@ -331,7 +226,10 @@ class AIService {
       }
     } catch (error: any) {
       console.error('Error in getUserHistory:', error);
-      await this.logInteraction('get_user_history', {}, { error: error.message }, 'error');
+      // Silently ignore analytics/network errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('getUserHistory error (dev):', error);
+      }
       return [];
     }
   }
@@ -367,7 +265,10 @@ class AIService {
       }
     } catch (error: any) {
       console.error('Error in checkDailyLimit:', error);
-      await this.logInteraction('check_daily_limit', {}, { error: error.message }, 'error');
+      // Silently ignore analytics/network errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('checkDailyLimit error (dev):', error);
+      }
       return { remaining: 3, limit: 3 }; // Default fallback values
     }
   }
@@ -397,12 +298,12 @@ class AIService {
         console.error('Error in getResources: Backend returned error', response.status);
         const errorData = await response.json().catch(() => ({}));
         await this.logInteraction('get_resources', { food: foodItem }, { error: errorData }, 'error');
-        return this.getMockResources();
+        throw new Error('Failed to get resources');
       }
     } catch (error: any) {
       console.error('Error in getResources:', error);
       await this.logInteraction('get_resources', { food: foodItem }, { error: error.message }, 'error');
-      return this.getMockResources();
+      throw error;
     }
   }
   
@@ -431,12 +332,12 @@ class AIService {
         console.error('Error in getFoodDetectResources: Backend returned error', response.status);
         const errorData = await response.json().catch(() => ({}));
         await this.logInteraction('get_food_detect_resources', { items: detectedItems }, { error: errorData }, 'error');
-        return [this.getMockResources(), this.getMockResources()];
+        throw new Error('Failed to get food detect resources');
       }
     } catch (error: any) {
       console.error('Error in getFoodDetectResources:', error);
       await this.logInteraction('get_food_detect_resources', { items: detectedItems }, { error: error.message }, 'error');
-      return [this.getMockResources(), this.getMockResources()];
+      throw error;
     }
   }
 

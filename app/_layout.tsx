@@ -1,14 +1,16 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { Stack } from "expo-router"
 import { View, Text } from "react-native"
 import * as SplashScreen from "expo-splash-screen"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useRouter } from "expo-router"
+import { useRouter, usePathname } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
 import { Image } from "react-native"
 import { AuthProvider } from "@/context/AuthContext"
+import { STORAGE_KEYS } from "@/config/constants"
+import { GlobalErrorBanner } from '@/components/GlobalErrorBanner';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete
 SplashScreen.preventAutoHideAsync()
@@ -17,39 +19,53 @@ export const unstable_settings = {
   initialRouteName: "index",
 }
 
-export default function RootLayout() {
+function MainLayout() {
+  // Centralized onboarding/session logic: do not duplicate in other screens!
   const [appIsReady, setAppIsReady] = useState(false)
   const [initializationStage, setInitializationStage] = useState<"loading" | "ready">("loading")
   const router = useRouter()
+  const pathname = usePathname()
+  const didInit = useRef(false)
 
   useEffect(() => {
     async function prepare() {
+      if (didInit.current) return; // Prevent multiple initializations
+      didInit.current = true;
       try {
         console.log("🚀 App initialization started")
-
-        // Check onboarding status
-        const hasCompletedOnboarding = await AsyncStorage.getItem("hasCompletedOnboarding")
+        // Check onboarding status using correct storage keys
+        const hasCompletedOnboarding = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
         const sessionViewed = await AsyncStorage.getItem("onboardingViewedThisSession")
-
+        const authToken = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
         console.log("📋 Onboarding status:", {
           completed: hasCompletedOnboarding,
           sessionViewed: sessionViewed,
+          authToken: !!authToken,
         })
-
         // Small delay to ensure smooth transitions
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
+        await new Promise((resolve) => setTimeout(resolve, 500))
         setInitializationStage("ready")
-        } catch (error) {
-        console.error("❌ App initialization error:", error)
-        // Continue anyway to prevent app from being stuck
+        // Routing logic
+        if (!authToken) {
+          // Not authenticated: go to auth
+          if (pathname !== '/auth') router.replace('/auth')
+        } else if (hasCompletedOnboarding !== 'true') {
+          // Authenticated but not completed onboarding: go to onboarding
+          if (pathname !== '/onboarding/profile-setup') {
+            router.replace('/onboarding/profile-setup')
+          }
+        } // else, let the user access the app (/(tabs)/home or wherever they are)
+      } catch (err) {
+        console.error("❌ App initialization error:", err)
         setInitializationStage("ready")
+        if (pathname !== '/auth') router.replace('/auth')
       } finally {
         setAppIsReady(true)
       }
     }
-
     prepare()
+    // Only run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const onLayoutRootView = React.useCallback(async () => {
@@ -83,28 +99,6 @@ export default function RootLayout() {
     )
   }
 
-  useEffect(() => {
-    // Hide splash screen immediately
-    SplashScreen.hideAsync().catch((e) => {
-      console.warn('Error hiding splash screen:', e);
-    });
-
-    // Check onboarding status for initial route
-    const getInitialRoute = async () => {
-      try {
-        const hasCompletedOnboarding = await AsyncStorage.getItem('hasCompletedOnboarding');
-        return hasCompletedOnboarding === 'true' ? '/auth' : '/index';
-      } catch (error) {
-        console.error('Error checking onboarding status:', error);
-        return '/index'; // Default to onboarding on error
-      }
-    };
-
-    getInitialRoute().then((route) => {
-      router.replace(route);
-    });
-  }, []);
-
   // If app is not ready, show loading screen
   if (!appIsReady || initializationStage === 'loading') {
     return renderLoadingScreen();
@@ -112,9 +106,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      <GlobalErrorBanner />
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/profile-setup" options={{ headerShown: false }} />
@@ -124,3 +118,5 @@ export default function RootLayout() {
     </AuthProvider>
   )
 }
+
+export default MainLayout;

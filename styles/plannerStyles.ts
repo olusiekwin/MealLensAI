@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 export const plannerStyles = StyleSheet.create({
   container: {
@@ -37,10 +37,12 @@ export const plannerStyles = StyleSheet.create({
     paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+    }),
     elevation: 2,
   },
   searchIcon: {
@@ -67,10 +69,12 @@ export const plannerStyles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
     elevation: 3,
     borderWidth: 1,
     borderColor: 'rgba(108, 108, 108, 0.15)',
@@ -144,10 +148,12 @@ export const plannerStyles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
     elevation: 2,
   },
   activeDayCard: {
@@ -208,10 +214,12 @@ export const plannerStyles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(124, 124, 124, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 4px rgba(0,0,0,0.08)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+    }),
     elevation: 2,
     marginBottom: 20,
   },

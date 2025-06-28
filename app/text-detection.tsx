@@ -15,7 +15,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Send, CookingPot } from 'lucide-react-native';
 import { recipesStyles } from '@/styles/recipes.styles';
 import aiService from '@/services/aiService';
-import { useUserStore } from '@/context/userStore';
 
 export default function TextDetectionScreen() {
   const [textInput, setTextInput] = useState('');
@@ -23,7 +22,6 @@ export default function TextDetectionScreen() {
   const [mode, setMode] = useState<'food' | 'recipe'>('food');
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { isAuthenticated, trackUsage, usage, subscription } = useUserStore();
 
   useEffect(() => {
     if (params.mode === 'food' || params.mode === 'recipe') {
@@ -37,27 +35,6 @@ export default function TextDetectionScreen() {
       return;
     }
 
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      Alert.alert(
-        'Login Required',
-        'Please login to use this feature',
-        [{ text: 'Login', onPress: () => router.push('/login') }]
-      );
-      return;
-    }
-
-    // Check daily limit
-    try {
-      await trackUsage();
-      if (usage.reachedDailyLimit && subscription.status === 'free') {
-        // Let the UsageLimitBanner handle this
-        return;
-      }
-    } catch (error) {
-      console.error('Error tracking usage:', error);
-    }
-    
     setProcessingText(true);
     try {
       // Split the input by commas to get an array of ingredients

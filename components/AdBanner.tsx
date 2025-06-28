@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Linking, Platform } from 'react-native';
 import { X } from 'lucide-react-native';
 import { useAdStore } from '@/context/adStore';
 
@@ -90,10 +90,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexDirection: 'row',
     height: 80,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0,0,0,0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+    }),
     elevation: 2,
   },
   bannerImage: {
@@ -131,10 +133,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginHorizontal: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0,0,0,0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+    }),
     elevation: 2,
   },
   nativeHeader: {

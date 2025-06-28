@@ -7,7 +7,7 @@ export const tabBarStyles = StyleSheet.create({
   tabBar: {
     height: 65,
     backgroundColor: "#FFFFFF",
-    ...(Platform.OS === 'web' ? { boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.08)' } : {
+    ...(Platform.OS === 'web' ? { boxShadow: '0 -2px 8px rgba(0,0,0,0.08)' } : {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: -2 },
       shadowOpacity: 0.08,

@@ -1,3 +1,38 @@
+// Add types for detection, instructions, and resources
+interface Detection {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  timestamp?: string;
+  createdAt?: string;
+  isFavorite?: boolean;
+  items?: string[];
+  confidence?: number | number[];
+  nutritionalInfo?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+}
+
+interface CookingInstructions {
+  steps: string[];
+  tips?: string[];
+  estimatedTime?: number;
+}
+
+interface ResourceItem {
+  title: string;
+  url: string;
+}
+
+interface Resources {
+  youtube: ResourceItem[];
+  websites: ResourceItem[];
+}
+
 import { useState, useEffect } from 'react';
 import { 
   View, 
@@ -11,134 +46,90 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Heart, Clock, Star, Share2, ExternalLink } from 'lucide-react-native';
-import aiService from '@/services/aiService';
-import { useUserStore } from '@/context/userStore';
+import { getDetectionById, getInstructions, getResources, toggleFavorite } from '@/services/detectionService';
 
 export default function DetectionDetailsScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const { isAuthenticated } = useUserStore();
-  const [detection, setDetection] = useState(null);
-  const [instructions, setInstructions] = useState(null);
-  const [resources, setResources] = useState(null);
+  const [detection, setDetection] = useState<Detection | null>(null);
+  const [instructions, setInstructions] = useState<CookingInstructions | null>(null);
+  const [resources, setResources] = useState<Resources | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingInstructions, setLoadingInstructions] = useState(false);
   const [loadingResources, setLoadingResources] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  
+
   useEffect(() => {
-    if (!isAuthenticated) {
-      Alert.alert(
-        'Login Required',
-        'Please login to view detection details',
-        [{ text: 'Login', onPress: () => router.push('/login') }]
-      );
-      return;
-    }
-    
     loadDetectionDetails();
   }, [params.detectionId]);
-  
+
   const loadDetectionDetails = async () => {
     if (!params.detectionId) return;
-    
     setLoading(true);
     try {
-      // In a real app, this would fetch the specific detection from the backend
-      const history = await aiService.getUserHistory();
-      const detectionData = history.find(item => item.id === params.detectionId);
-      
+      const detectionData = await getDetectionById(params.detectionId);
       if (detectionData) {
         setDetection(detectionData);
-        // Set favorite status based on the detection data
         setIsFavorite(detectionData.isFavorite || false);
       } else {
         Alert.alert('Error', 'Detection not found');
         router.back();
       }
     } catch (error) {
-      console.error('Error loading detection:', error);
       Alert.alert('Error', 'Failed to load detection details');
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleGetInstructions = async () => {
     if (!detection) return;
-    
     setLoadingInstructions(true);
     try {
-      const result = await aiService.getInstructions(detection.title || detection.items[0]);
+      const result = await getInstructions(detection.title || detection.items[0]);
       setInstructions(result);
     } catch (error) {
-      console.error('Error getting instructions:', error);
       Alert.alert('Error', 'Failed to get cooking instructions');
     } finally {
       setLoadingInstructions(false);
     }
   };
-  
+
   const handleGetResources = async () => {
     if (!detection) return;
-    
     setLoadingResources(true);
     try {
-      // Get the food item to search for
       const foodItem = detection.title || (detection.items && detection.items.length > 0 ? detection.items[0] : '');
-      
-      if (!foodItem) {
-        throw new Error('No food item to search for');
-      }
-      
-      // Call the API to get resources
-      const resourcesData = await aiService.getResources(foodItem);
-      
-      // Format the resources data for our UI
-      setResources({
-        youtube: resourcesData.YoutubeSearch?.map(item => ({
-          title: item.title,
-          url: item.link
-        })) || [],
-        websites: resourcesData.GoogleSearch?.map(item => ({
-          title: item.title,
-          url: item.link
-        })) || []
-      });
+      if (!foodItem) throw new Error('No food item to search for');
+      const resourcesData = await getResources(foodItem);
+      setResources(resourcesData);
     } catch (error) {
-      console.error('Error getting resources:', error);
       Alert.alert('Error', 'Failed to get resources');
     } finally {
       setLoadingResources(false);
     }
   };
-  
+
   const handleToggleFavorite = async () => {
     if (!detection || !detection.id) return;
-    
     try {
       const newFavoriteStatus = !isFavorite;
-      const success = await aiService.toggleFavorite(detection.id, newFavoriteStatus);
-      
+      const success = await toggleFavorite(detection.id, newFavoriteStatus);
       if (success) {
         setIsFavorite(newFavoriteStatus);
-        Alert.alert(
-          newFavoriteStatus ? 'Added to Favorites' : 'Removed from Favorites',
-          newFavoriteStatus ? 'This item has been added to your favorites' : 'This item has been removed from your favorites'
-        );
+        Alert.alert(newFavoriteStatus ? 'Added to Favorites' : 'Removed from Favorites');
       } else {
         Alert.alert('Error', 'Failed to update favorite status');
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
       Alert.alert('Error', 'Failed to update favorite status');
     }
   };
-  
+
   const handleBack = () => {
     router.back();
   };
-  
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -146,7 +137,7 @@ export default function DetectionDetailsScreen() {
       </View>
     );
   }
-  
+
   if (!detection) {
     return (
       <View style={styles.errorContainer}>

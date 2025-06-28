@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { useUserStore } from "@/context/userStore"
+import { useAuth } from "@/context/AuthContext"
 import {
   Text,
   View,
@@ -13,7 +13,6 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Image,
   Animated,
   SafeAreaView,
   StatusBar as RNStatusBar,
@@ -21,31 +20,34 @@ import {
 } from "react-native"
 import { useRouter } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User } from "lucide-react-native"
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { authStyles } from "@/styles/auth.styles"
-import * as authService from "@/services/authService"
 
 const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#202026',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#FFFFFF", // Changed to white for better visibility
+    textAlign: "center",
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)", // Changed to white with opacity
+    textAlign: "center",
     marginBottom: 24,
   },
 })
 
 export default function AuthScreen(): React.ReactElement {
   const router = useRouter()
+  // Use the correct function names from AuthContext
+  // signIn: for login, signUp: for registration, signOut: for logout
+  // user: current user object, loading: auth loading state
+  const { signIn, signUp, signOut, user, loading, loginError, loginSuccess, clearLoginMessages } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false) // Changed from true to false
   const [initError, setInitError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -56,71 +58,56 @@ export default function AuthScreen(): React.ReactElement {
   const [passwordError, setPasswordError] = useState("")
   const [generalError, setGeneralError] = useState("")
   const [focusedInput, setFocusedInput] = useState<"email" | "password" | "confirmPassword" | "username" | null>(null)
-  const [canGoBack, setCanGoBack] = useState(false)
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.95)).current
 
   useEffect(() => {
+    // Start animations when component mounts
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start()
+
     const checkAuthStatus = async () => {
       try {
         setIsLoading(true)
-        const isLoggedIn = await authService.isLoggedIn()
+        const isLoggedIn = await isLoggedIn()
         if (isLoggedIn) {
-          router.replace('/(tabs)/index')
+          router.replace("/(tabs)")
         }
       } catch (error) {
-        console.error('Error checking auth status:', error)
-        setInitError('Failed to initialize. Please try again.')
+        console.error("Error checking auth status:", error)
+        setInitError("Failed to initialize. Please try again.")
       } finally {
         setIsLoading(false)
       }
     }
-    checkAuthStatus()
-  }, [router])
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={authStyles.container}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
-        <Text style={authStyles.subtitle}>Loading...</Text>
-      </SafeAreaView>
-    )
-  }
+    // Only check auth status, don't set loading to true initially
+    // checkAuthStatus()
+  }, [fadeAnim, scaleAnim, router])
 
-  if (initError) {
-    return (
-      <SafeAreaView style={authStyles.container}>
-        <Text style={authStyles.title}>Error</Text>
-        <Text style={authStyles.subtitle}>{initError}</Text>
-        <TouchableOpacity 
-          style={authStyles.primaryButton} 
-          onPress={() => {
-            setInitError(null)
-            setIsLoading(true)
-            // Retry initialization
-            const checkAuthStatus = async () => {
-              try {
-                const isLoggedIn = await authService.isLoggedIn()
-                if (isLoggedIn) {
-                  router.replace('/(tabs)/index')
-                }
-              } catch (error) {
-                console.error('Retry failed:', error)
-                setInitError('Failed to initialize. Please try again.')
-              } finally {
-                setIsLoading(false)
-              }
-            }
-            checkAuthStatus()
-          }}
-        >
-          <Text style={authStyles.primaryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    )
-  }
+  useEffect(() => {
+    if (loginError) {
+      Alert.alert('Login Failed', loginError, [
+        { text: 'OK', onPress: clearLoginMessages }
+      ])
+    } else if (loginSuccess) {
+      Alert.alert('Login Successful', loginSuccess, [
+        { text: 'OK', onPress: clearLoginMessages }
+      ])
+    }
+  }, [loginError, loginSuccess])
 
   const validateForm = () => {
     setGeneralError("")
@@ -166,92 +153,51 @@ export default function AuthScreen(): React.ReactElement {
 
     try {
       if (isLogin) {
-        // Check if authService is defined before calling login
-        if (!authService || typeof authService.login !== "function") {
-          console.error("Auth service or login method is not available")
-          setGeneralError("Authentication service is not available. Please try again later.")
-          setIsLoading(false)
-          return
-        }
-
-        const response = await authService.login({
-          email,
-          password,
-        })
-
-        console.log("Login response:", response)
-
-        if (response.success && response.token) {
-          // Use userStore to handle authentication properly
-          console.log("✅ Auth: User logged in successfully with token:", response.token.substring(0, 10) + "...")
-
-          // Get user ID from response or use email as fallback
-          const userId = response.user?.id || email
-
-          // Initialize userStore with token and user ID
-          try {
-            await useUserStore.getState().login(response.token, userId)
-            console.log("✅ User store initialized with token and ID:", userId)
-
-            // Navigate to home tabs
-            router.replace("/(tabs)")
-          } catch (error) {
-            console.error("Failed to initialize user store:", error)
-            setGeneralError("Login successful but failed to load user data. Please try again.")
-          }
-        } else if (response.error?.code === "email_not_confirmed") {
-          setGeneralError("Please check your email to verify your account before logging in.")
-        } else if (response.error?.message) {
-          setGeneralError(response.error.message)
-          if (response.error.code === "invalid_credentials") {
-            setPasswordError("Invalid email or password")
-          }
+        // Use signIn from AuthContext (email, password)
+        const response = await signIn(email, password)
+        console.log('Login response:', response)
+        if (response.success) {
+          // Redirect to home tabs
+          router.replace('/(tabs)')
+        } else if (response.error) {
+          setGeneralError(response.error)
         } else {
-          setGeneralError("Login failed. Please try again.")
+          setGeneralError('Login failed. Please try again.')
         }
       } else {
-        const response = await authService.register({
-          email,
-          password,
-          confirm_password: confirmPassword,
-          username,
-        })
-
+        // Use signUp from AuthContext (email, password, username)
+        const response = await signUp(email, password, username)
         if (response.success) {
-          // Show verification modal
           Alert.alert(
-            "Registration Successful!",
-            "Please check your email to verify your account. You will need to verify your email before you can log in.",
+            'Registration Successful!',
+            'Please check your email to verify your account. You will need to verify your email before you can log in.',
             [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => {
                   setIsLogin(true)
-                  setEmail("")
-                  setPassword("")
-                  setConfirmPassword("")
-                  setUsername("")
+                  setEmail('')
+                  setPassword('')
+                  setConfirmPassword('')
+                  setUsername('')
                 },
               },
             ],
           )
-        } else if (response.error?.message) {
-          setGeneralError(response.error.message)
-          if (response.error.code === "email_taken") {
-            setGeneralError("This email is already registered. Please try logging in.")
-          }
+        } else if (response.error) {
+          setGeneralError(response.error)
         } else {
-          setGeneralError("Registration failed. Please try again.")
+          setGeneralError('Registration failed. Please try again.')
         }
       }
     } catch (error: any) {
-      console.error("Auth error:", error)
-      if (error.message === "Network Error") {
-        setGeneralError("Unable to connect to server. Please check your internet connection.")
+      console.error('Auth error:', error)
+      if (error.message === 'Network Error') {
+        setGeneralError('Unable to connect to server. Please check your internet connection.')
       } else if (error.response?.data?.error?.message) {
         setGeneralError(error.response.data.error.message)
       } else {
-        setGeneralError("An error occurred. Please try again.")
+        setGeneralError('An error occurred. Please try again.')
       }
     } finally {
       setIsLoading(false)
@@ -273,15 +219,19 @@ export default function AuthScreen(): React.ReactElement {
     setGeneralError("")
   }
 
-  const handleSocialLogin = async (provider: "google") => {
+  const handleSocialLogin = async (provider: "google" | "apple" | "facebook") => {
     try {
       setIsLoading(true)
       setGeneralError("")
 
-      const result = await authService.signInWithGoogle()
-
-      if (result?.token) {
-        router.replace("/(tabs)")
+      if (provider === "google") {
+        const result = await signInWithGoogle()
+        if (result?.token) {
+          router.replace("/(tabs)")
+        }
+      } else {
+        // Handle other providers
+        Alert.alert("Coming Soon", `${provider} login will be available soon.`)
       }
     } catch (error) {
       console.error(`${provider} login error:`, error)
@@ -295,17 +245,16 @@ export default function AuthScreen(): React.ReactElement {
     }
   }
 
-  const goBack = () => {
-    // Check if we can go back, otherwise navigate to a safe fallback
-    if (router.canGoBack()) {
-      router.back()
-    } else {
-      // Navigate to your app's main screen or home screen
-      router.replace("/(tabs)") // or wherever your main app screen is
-      // Alternative options:
-      // router.push('/') // if you have a home route
-      // router.replace('/welcome') // if you have a welcome screen
-    }
+  // Show loading screen if initializing
+  if (isLoading && !email && !password) {
+    return (
+      <SafeAreaView style={authStyles.container}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={{ color: "#FFFFFF", marginTop: 16 }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
@@ -320,21 +269,20 @@ export default function AuthScreen(): React.ReactElement {
         resizeMode="cover"
       >
         <LinearGradient colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.3)"]} style={authStyles.overlay}>
-          {/* Hide the custom header */}
-          <View style={{ display: 'none' }}>
-            <View style={authStyles.header}>
-              <TouchableOpacity 
-                style={authStyles.backButton} 
-                onPress={() => router.back()}
+          {/* Header - Now visible, but no back button */}
+          <View style={authStyles.header}>
+            {/* Removed back button for auth screen */}
+            <View style={authStyles.logoContainer}>
+              <View
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: 8,
+                  padding: 8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <ArrowLeft size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <View style={authStyles.logoContainer}>
-                <Image 
-                  source={require('../assets/images/logo-2.svg')} 
-                  style={authStyles.logo} 
-                  resizeMode="contain"
-                />
+                <Text style={{ color: "#FFFFFF", fontWeight: "bold" }}>LOGO</Text>
               </View>
             </View>
           </View>
@@ -356,11 +304,11 @@ export default function AuthScreen(): React.ReactElement {
                 ]}
               >
                 <View style={isLogin ? authStyles.formContainer : authStyles.formContainerRegister}>
-                  <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{isLogin ? 'Welcome Back' : 'Create Account'}</Text>
+                  <View style={{ marginBottom: 20 }}>
+                    <Text style={styles.headerTitle}>{isLogin ? "Welcome Back" : "Create Account"}</Text>
                     <Text style={styles.headerSubtitle}>
-                      {isLogin ? 'Sign in to continue' : 'Fill in your details to get started'}
-                  </Text>
+                      {isLogin ? "Sign in to continue" : "Fill in your details to get started"}
+                    </Text>
                   </View>
 
                   {generalError ? (
@@ -380,7 +328,7 @@ export default function AuthScreen(): React.ReactElement {
                       >
                         <User
                           size={18}
-                          color={focusedInput === "username" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                          color={focusedInput === "username" ? "#202026" : "rgba(255, 255, 255, 0.7)"}
                           style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
                         />
                         <TextInput
@@ -409,7 +357,7 @@ export default function AuthScreen(): React.ReactElement {
                     >
                       <Mail
                         size={18}
-                        color={focusedInput === "email" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                        color={focusedInput === "email" ? "#202026" : "rgba(255, 255, 255, 0.7)"}
                         style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
                       />
                       <TextInput
@@ -437,7 +385,7 @@ export default function AuthScreen(): React.ReactElement {
                     >
                       <Lock
                         size={18}
-                        color={focusedInput === "password" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                        color={focusedInput === "password" ? "#202026" : "rgba(255, 255, 255, 0.7)"}
                         style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
                       />
                       <TextInput
@@ -483,7 +431,7 @@ export default function AuthScreen(): React.ReactElement {
                       >
                         <Lock
                           size={18}
-                          color={focusedInput === "confirmPassword" ? "#000000" : "rgba(255, 255, 255, 0.7)"}
+                          color={focusedInput === "confirmPassword" ? "#202026" : "rgba(255, 255, 255, 0.7)"}
                           style={isLogin ? authStyles.inputIcon : authStyles.inputIconRegister}
                         />
                         <TextInput

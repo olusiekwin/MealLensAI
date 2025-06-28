@@ -137,4 +137,153 @@ export const onboardingStyles = StyleSheet.create({
     textAlign: 'center',
     color: '#FFFFFF',
   },
+  // Professional Progress Bar
+  progressBarContainer: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  progressBarBackground: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 2,
+    marginRight: 12,
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 2,
+  },
+  progressText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
+    minWidth: 40,
+  },
+  // Skip button
+  skipButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  skipButtonText: {
+    color: "#6A6A6A",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  // Preferences
+  preferencesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginVertical: 20,
+    width: "100%",
+  },
+  preferenceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    minHeight: 48,
+  },
+  preferenceButtonSelected: {
+    backgroundColor: "#202026",
+  },
+  preferenceButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#202026",
+    marginRight: 6,
+    textAlign: "center",
+  },
+  preferenceButtonTextSelected: {
+    color: "#FFFFFF",
+  },
+  // Skills
+  skillsContainer: {
+    marginVertical: 20,
+    width: "100%",
+  },
+  skillButton: {
+    position: "relative",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    minHeight: 56,
+    justifyContent: "center",
+  },
+  skillButtonSelected: {
+    backgroundColor: "#202026",
+    borderWidth: 1,
+    borderColor: "#202026",
+  },
+  skillButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#202026",
+    textAlign: "center",
+  },
+  skillButtonTextSelected: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  skillSelectedIndicator: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#4ECDC4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  // Error handling
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1A1A1A",
+    paddingHorizontal: 20,
+  },
+  errorTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    marginBottom: 10,
+    fontWeight: "600",
+  },
+  errorMessage: {
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
+    marginBottom: 20,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  errorButton: {
+    padding: 12,
+    backgroundColor: "#202026",
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  errorButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 16,
+  },
 });

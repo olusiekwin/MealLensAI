@@ -21,11 +21,12 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 import { LinearGradient } from "expo-linear-gradient"
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from "lucide-react-native"
 import { authStyles } from "@/styles/auth.styles"
-import authService from "@/services/authService"
+import { useAuth } from "@/context/AuthContext"
 
 export default function ResetPasswordScreen(): React.ReactElement {
   const router = useRouter()
   const { token } = useLocalSearchParams()
+  const { resetPassword } = useAuth()
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -98,11 +99,7 @@ export default function ResetPasswordScreen(): React.ReactElement {
         throw new Error("Reset token is missing")
       }
 
-      const response = await authService.resetPassword({
-        token: token.toString(),
-        password,
-        confirmPassword,
-      })
+      const response = await resetPassword(token.toString(), password, confirmPassword)
 
       if (response.success) {
         setIsSubmitted(true)

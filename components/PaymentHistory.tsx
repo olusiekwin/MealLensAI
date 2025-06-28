@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Platform } from 'react-native';
 import { useUserStore } from '@/context/userStore';
 import { CreditCard, CheckCircle, AlertCircle } from 'lucide-react-native';
 
@@ -64,10 +64,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0,0,0,0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+    }),
     elevation: 2,
   },
   title: {
@@ -121,10 +123,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0,0,0,0.05)' } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+    }),
     elevation: 2,
   },
   emptyText: {

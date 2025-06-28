@@ -48,10 +48,9 @@ export default function TabLayout() {
       })}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="detection" options={{ title: "Detection History" }} />
+      <Tabs.Screen name="detection" options={{ title: "Detection" }} />
       <Tabs.Screen name="favorites" options={{ title: "Favorites" }} />
       <Tabs.Screen name="profile" options={{ title: "Profile" }} />
-      
       {/* Hide all non-tab screens from the tab bar */}
       <Tabs.Screen name="ai-chat" options={{ href: null }} />
       <Tabs.Screen name="camera" options={{ href: null }} />

@@ -4,6 +4,7 @@ import { Search, Filter, Clock, Star, Heart } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { favoritesStyles } from '../../styles/favorites.styles';
 import aiService from '@/services/aiService';
+import { useUserStore } from '@/context/userStore';
 
 const categories = ["All", "Recipe", "Foods"];
 
@@ -51,10 +52,10 @@ export default function FavoritesScreen() {
   const loadFavorites = async () => {
     try {
       const history = await aiService.getUserHistory();
-      const favorites = history.filter(item => item.isFavorite);
-      setFavoriteItems(favorites);
     } catch (error) {
-      console.error('Error loading favorites:', error);
+      // Suppress analytics/CORS errors in dev
+      if (error?.message && error.message.includes('analytics')) return;
+      console.error(error);
     }
   };
 
@@ -180,13 +181,13 @@ export default function FavoritesScreen() {
             </View>
             <Text style={favoritesStyles.emptyStateTitle}>No Favorites Yet</Text>
             <Text style={favoritesStyles.emptyStateDescription}>
-              You haven't added any favorites. Explore recipes and save your favorites here.
+              You haven't added any favorites. Your saved detections will appear here.
             </Text>
             <TouchableOpacity
               style={favoritesStyles.emptyStateButton}
-              onPress={() => router.push('/recipes')}
+              onPress={() => router.push('/detection')}
             >
-              <Text style={favoritesStyles.emptyStateButtonText}>Explore Recipes</Text>
+              <Text style={favoritesStyles.emptyStateButtonText}>View Detection History</Text>
             </TouchableOpacity>
           </View>
         )}

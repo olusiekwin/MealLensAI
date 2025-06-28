@@ -28,7 +28,8 @@ import {
   Star
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { trackAppUsage, searchFood, hasReachedDailyLimit } from '@/services/api';
+import { trackAppUsage, searchFood } from '@/services/api';
+import aiService from '@/services/aiService';
 import { aiChatStyles } from '@/styles/aiChat.styles';
 
 type Recipe = {
@@ -42,13 +43,13 @@ type Recipe = {
 };
 
 export default function AIChatScreen() {
+  const router = useRouter();
   const [detectedFood, setDetectedFood] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [cookingInstructions, setCookingInstructions] = useState<string[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
-  const router = useRouter();
   const params = useLocalSearchParams();
 
   useEffect(() => {

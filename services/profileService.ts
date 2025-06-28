@@ -25,7 +25,7 @@ class ProfileService {
    */
   async getProfile(): Promise<UserProfile | null> {
     try {
-      const response = await api.get('/user/profile');
+      const response = await api.get('/api/v1/user/profile');
       
       if (response.data?.success && response.data?.data) {
         return response.data.data;
@@ -42,7 +42,7 @@ class ProfileService {
    */
   async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile | null> {
     try {
-      const response = await api.put('/user/profile', profileData);
+      const response = await api.put('/api/v1/user/profile', profileData);
       
       if (response.data?.success && response.data?.data) {
         // Mark profile setup as completed if we have all required fields

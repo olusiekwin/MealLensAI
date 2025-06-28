@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0, 0, 0, 0.05)' } : {
+    ...(Platform.OS === 'web' ? { boxShadow: '0 2px 3px rgba(0,0,0,0.05)' } : {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
